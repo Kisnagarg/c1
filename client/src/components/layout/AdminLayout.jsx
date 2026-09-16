@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -15,16 +15,21 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const navItems = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/admin/products', label: 'Products', icon: Package },
     { to: '/admin/categories', label: 'Categories', icon: Tags },
-    { to: '/admin/bookings', label: 'Bookings', icon: ClipboardList },
-    { to: '/admin/users', label: 'Users', icon: Users },
+    { to: '/admin/bookings', label: 'Orders & Bookings', icon: ClipboardList },
+    { to: '/admin/users', label: 'Customers', icon: Users },
+    { to: '/admin/security', label: 'Security & Password', icon: Settings },
   ];
 
   const isActive = (path) => {

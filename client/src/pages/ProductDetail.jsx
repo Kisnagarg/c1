@@ -16,12 +16,15 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await API.get(`/products/${slug}`);
-        setProduct(res.data.product);
+        const prod = res.data.product;
+        setProduct(prod);
+        setActiveImage(prod?.image || prod?.images?.[0] || '');
       } catch (err) {
         setError(err.response?.data?.message || 'Product not found');
       } finally {
@@ -43,6 +46,10 @@ export default function ProductDetail() {
       </div>
     );
   }
+
+  const allImages = product.images && product.images.length > 0 
+    ? product.images 
+    : (product.image ? [product.image] : []);
 
   const handleBookNow = () => {
     if (!user) {
@@ -71,13 +78,33 @@ export default function ProductDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           
-          {/* Product Image */}
-          <div className="bg-gray-50 rounded-3xl p-8 flex items-center justify-center aspect-square md:aspect-auto md:h-[600px]">
-            <img 
-              src={product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop'} 
-              alt={product.name}
-              className="w-full h-full object-contain mix-blend-multiply drop-shadow-xl"
-            />
+          {/* Product Image & Multi-Image Gallery */}
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-3xl p-8 flex items-center justify-center aspect-square md:h-[500px] border border-gray-100 overflow-hidden shadow-sm">
+              <img 
+                src={activeImage || product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop'} 
+                alt={product.name}
+                className="w-full h-full object-contain mix-blend-multiply drop-shadow-xl transition-all duration-300"
+              />
+            </div>
+
+            {/* Thumbnail selector */}
+            {allImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImage(img)}
+                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 bg-gray-50 shrink-0 transition-all ${
+                      activeImage === img ? 'border-primary-600 ring-2 ring-primary-500/30' : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -187,6 +214,42 @@ export default function ProductDetail() {
           </div>
         </div>
 
+      </div>
+
+      {/* Mobile Sticky Bottom CTA Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3.5 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4 animate-slide-up">
+        <div>
+          <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">Total Price</span>
+          <span className="text-xl font-black text-gray-900">{formatPrice(product.price * quantity)}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Mobile Qty Selector */}
+          <div className="flex items-center border border-gray-300 rounded-xl bg-gray-50 h-11">
+            <button 
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              disabled={!product.isAvailable}
+              className="px-3 h-full text-gray-600 active:bg-gray-200 text-base font-bold disabled:opacity-50"
+            >-</button>
+            <span className="w-8 text-center font-bold text-sm">
+              {quantity}
+            </span>
+            <button 
+              onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+              disabled={!product.isAvailable || quantity >= product.stock}
+              className="px-3 h-full text-gray-600 active:bg-gray-200 text-base font-bold disabled:opacity-50"
+            >+</button>
+          </div>
+
+          <Button 
+            size="md" 
+            className="font-bold text-sm px-6 h-11 shadow-md bg-primary-600 hover:bg-primary-700"
+            disabled={!product.isAvailable}
+            onClick={handleBookNow}
+          >
+            {product.isAvailable ? 'Book Now' : 'Out of Stock'}
+          </Button>
+        </div>
       </div>
     </div>
   );

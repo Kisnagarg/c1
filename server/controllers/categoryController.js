@@ -4,7 +4,15 @@ const Product = require('../models/Product');
 // Get all categories with product counts
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().sort({ name: 1 }).lean();
+    const filter = {};
+    // Only return active categories for public users, unless includeInactive=true is requested by admin
+    if (req.query.includeInactive !== 'true') {
+      filter.isActive = { $ne: false };
+    }
+
+    const categories = await Category.find(filter)
+      .sort({ displayOrder: 1, name: 1 })
+      .lean();
 
     // Get product counts for each category
     const counts = await Product.aggregate([
@@ -44,14 +52,20 @@ exports.getCategory = async (req, res) => {
 // Create category (admin)
 exports.createCategory = async (req, res) => {
   try {
-    const { name, description, image } = req.body;
+    const { name, description, image, isActive, displayOrder } = req.body;
 
     const existing = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
     if (existing) {
       return res.status(400).json({ success: false, message: 'Category already exists.' });
     }
 
-    const category = await Category.create({ name, description, image });
+    const category = await Category.create({
+      name,
+      description,
+      image,
+      isActive: isActive !== undefined ? isActive : true,
+      displayOrder: displayOrder !== undefined ? Number(displayOrder) : 0
+    });
 
     res.status(201).json({
       success: true,
@@ -72,10 +86,18 @@ exports.updateCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found.' });
     }
 
-    const { name, description, image } = req.body;
-    if (name) category.name = name;
+    const { name, description, image, isActive, displayOrder } = req.body;
+    if (name) {
+      category.name = name;
+      category.slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    }
     if (description !== undefined) category.description = description;
     if (image !== undefined) category.image = image;
+    if (isActive !== undefined) category.isActive = Boolean(isActive);
+    if (displayOrder !== undefined) category.displayOrder = Number(displayOrder);
 
     await category.save();
 

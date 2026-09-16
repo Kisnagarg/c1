@@ -1,9 +1,12 @@
 export function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', {
+  if (price === undefined || price === null || isNaN(Number(price))) return '₹0';
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'INR',
+    maximumFractionDigits: 0
   }).format(price);
 }
+
 
 export function formatDate(date) {
   return new Date(date).toLocaleDateString('en-US', {

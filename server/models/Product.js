@@ -42,11 +42,19 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  images: [{
+    type: String,
+    trim: true
+  }],
   specifications: [{
     key: { type: String, trim: true },
     value: { type: String, trim: true }
   }],
   isAvailable: {
+    type: Boolean,
+    default: true
+  },
+  isActive: {
     type: Boolean,
     default: true
   },
@@ -80,6 +88,5 @@ productSchema.pre('save', function(next) {
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
-productSchema.index({ slug: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

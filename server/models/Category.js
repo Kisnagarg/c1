@@ -21,6 +21,14 @@ const categorySchema = new mongoose.Schema({
   image: {
     type: String,
     default: ''
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  displayOrder: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,
@@ -46,5 +54,8 @@ categorySchema.virtual('products', {
   foreignField: 'category',
   count: true
 });
+
+categorySchema.index({ isActive: 1 });
+categorySchema.index({ displayOrder: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);

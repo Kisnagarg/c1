@@ -67,7 +67,6 @@ bookingSchema.statics.generateBookingId = function() {
 };
 
 bookingSchema.index({ user: 1 });
-bookingSchema.index({ bookingId: 1 });
 bookingSchema.index({ status: 1 });
 bookingSchema.index({ createdAt: -1 });
 

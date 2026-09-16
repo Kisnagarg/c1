@@ -47,6 +47,24 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
+  const googleLogin = async (payload) => {
+    const res = await API.post('/auth/google', payload);
+    localStorage.setItem('bookmart_token', res.data.token);
+    localStorage.setItem('bookmart_user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+    return res.data;
+  };
+
+  const forgotPassword = async (email) => {
+    const res = await API.post('/auth/forgot-password', { email });
+    return res.data;
+  };
+
+  const resetPassword = async (email, resetCode, newPassword) => {
+    const res = await API.post('/auth/reset-password', { email, resetCode, newPassword });
+    return res.data;
+  };
+
   const logout = () => {
     localStorage.removeItem('bookmart_token');
     localStorage.removeItem('bookmart_user');
@@ -59,11 +77,22 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      register, 
+      googleLogin, 
+      forgotPassword, 
+      resetPassword, 
+      logout, 
+      updateUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
 
 export function useAuth() {
   const ctx = useContext(AuthContext);

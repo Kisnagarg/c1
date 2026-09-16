@@ -6,11 +6,28 @@ const Booking = require('../models/Booking');
 // Dashboard statistics
 exports.getStats = async (req, res) => {
   try {
-    const [totalProducts, totalCategories, totalUsers, totalBookings, revenueResult, stockResult] = await Promise.all([
+    const [
+      totalProducts,
+      activeProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      totalCategories,
+      totalUsers,
+      totalBookings,
+      pendingBookings,
+      completedBookings,
+      revenueResult,
+      stockResult
+    ] = await Promise.all([
       Product.countDocuments(),
+      Product.countDocuments({ isAvailable: true, isActive: { $ne: false } }),
+      Product.countDocuments({ stock: { $gt: 0, $lte: 5 } }),
+      Product.countDocuments({ stock: { $lte: 0 } }),
       Category.countDocuments(),
       User.countDocuments({ role: 'user' }),
       Booking.countDocuments(),
+      Booking.countDocuments({ status: 'pending' }),
+      Booking.countDocuments({ status: 'completed' }),
       Booking.aggregate([
         { $match: { status: { $ne: 'cancelled' } } },
         { $group: { _id: null, total: { $sum: '$totalAmount' } } }
@@ -22,7 +39,7 @@ exports.getStats = async (req, res) => {
 
     // Recent bookings
     const recentBookings = await Booking.find()
-      .populate('user', 'name email')
+      .populate('user', 'name email phone')
       .sort({ createdAt: -1 })
       .limit(10)
       .lean();
@@ -52,9 +69,14 @@ exports.getStats = async (req, res) => {
       success: true,
       stats: {
         totalProducts,
+        activeProducts,
+        lowStockProducts,
+        outOfStockProducts,
         totalCategories,
         totalUsers,
         totalBookings,
+        pendingBookings,
+        completedBookings,
         totalRevenue: revenueResult[0]?.total || 0,
         totalStock: stockResult[0]?.total || 0,
         recentBookings,
@@ -189,7 +211,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// Toggle user active status
+// Toggle user active status or update details (admin)
 exports.toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -201,12 +223,23 @@ exports.toggleUserStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cannot modify admin accounts.' });
     }
 
-    user.isActive = !user.isActive;
+    if (req.body && req.body.phone !== undefined) {
+      user.phone = req.body.phone.trim();
+    }
+    if (req.body && req.body.name) {
+      user.name = req.body.name.trim();
+    }
+    if (req.body && typeof req.body.isActive === 'boolean') {
+      user.isActive = req.body.isActive;
+    } else if (!req.body || req.body.toggleStatus || Object.keys(req.body).length === 0) {
+      user.isActive = !user.isActive;
+    }
+
     await user.save();
 
     res.json({
       success: true,
-      message: `User ${user.isActive ? 'enabled' : 'disabled'} successfully.`,
+      message: `Customer profile updated successfully.`,
       user
     });
   } catch (error) {

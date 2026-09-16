@@ -50,11 +50,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow shrink-0">
               <ShoppingBag className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-              BookMart
+            <span className="text-xl font-black bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+              Rathore Electronics
             </span>
           </Link>
 
@@ -92,14 +92,23 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-semibold">{user.name?.charAt(0).toUpperCase()}</span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 max-w-24 truncate">{user.name}</span>
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-500/20"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">{user.name?.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-700 max-w-28 truncate">{user.name}</span>
                   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                 </button>
+
 
                 {profileOpen && (
                   <>

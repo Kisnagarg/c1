@@ -1,12 +1,10 @@
 {
-  "name": "bookmart-server",
+  "name": "bookmart-monorepo",
   "version": "1.0.0",
-  "description": "BookMart E-Commerce API Server",
-  "main": "server.js",
+  "description": "BookMart E-Commerce Client & Serverless Backend",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "seed": "node seed/seed.js"
+    "build": "cd client && npm install && npm run build",
+    "seed": "node server/seed/seed.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

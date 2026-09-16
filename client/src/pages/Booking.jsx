@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, CheckCircle2, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, ShoppingBag, Phone, AlertCircle } from 'lucide-react';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
@@ -13,7 +13,7 @@ export default function Booking() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   
   const initialQty = parseInt(searchParams.get('qty')) || 1;
   
@@ -23,6 +23,13 @@ export default function Booking() {
   const [success, setSuccess] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [quantity, setQuantity] = useState(initialQty);
+  const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
+
+  useEffect(() => {
+    if (user?.phone && !customerPhone) {
+      setCustomerPhone(user.phone);
+    }
+  }, [user?.phone]);
 
   useEffect(() => {
     API.get(`/products/${slug}`)
@@ -40,11 +47,29 @@ export default function Booking() {
   }, [slug, initialQty, navigate]);
 
   const handleConfirm = async () => {
+    const finalPhone = (customerPhone || user?.phone || '').trim();
+    if (!finalPhone || finalPhone.length < 10) {
+      toast.error('Customer phone number is mandatory (min. 10 digits) to complete booking');
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // If user had no phone in profile, update profile
+      if (!user?.phone || user.phone !== finalPhone) {
+        try {
+          const profileRes = await API.put('/auth/profile', { phone: finalPhone, name: user?.name });
+          if (profileRes.data.user) updateUser(profileRes.data.user);
+        } catch (e) {
+          console.warn('Profile sync notice:', e);
+        }
+      }
+
       const res = await API.post('/bookings', {
-        items: [{ productId: product._id, quantity }]
+        items: [{ productId: product._id, quantity }],
+        phone: finalPhone
       });
+      
       setBookingId(res.data.booking.bookingId);
       setSuccess(true);
       toast.success('Booking confirmed successfully!');
@@ -149,22 +174,53 @@ export default function Booking() {
 
             {/* User Info */}
             <Card className="p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Your Information</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Customer Contact Details</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="block text-gray-500 mb-1">Name</span>
-                  <span className="font-medium text-gray-900">{user.name}</span>
+                  <span className="block text-gray-500 mb-1">Full Name</span>
+                  <span className="font-semibold text-gray-900">{user?.name}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-500 mb-1">Email</span>
-                  <span className="font-medium text-gray-900">{user.email}</span>
+                  <span className="block text-gray-500 mb-1">Email Address</span>
+                  <span className="font-semibold text-gray-900">{user?.email}</span>
                 </div>
-                {user.phone && (
-                  <div>
-                    <span className="block text-gray-500 mb-1">Phone</span>
-                    <span className="font-medium text-gray-900">{user.phone}</span>
+
+                <div className="sm:col-span-2 pt-2 border-t border-gray-100">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>Phone Number * (Mandatory)</span>
+                    {customerPhone && customerPhone.length >= 10 && (
+                      <span className="text-emerald-600 text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Verified for Order Updates
+                      </span>
+                    )}
+                  </label>
+                  
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-primary-600 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="tel"
+                      required
+                      placeholder="Enter 10-digit mobile number (e.g. +91 98765 43210)"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 font-medium ${
+                        !customerPhone || customerPhone.trim().length < 10
+                          ? 'border-amber-300 bg-amber-50/50 focus:ring-amber-500 focus:bg-white'
+                          : 'border-gray-200 bg-gray-50 focus:ring-primary-500 focus:bg-white'
+                      }`}
+                    />
                   </div>
-                )}
+                  {(!customerPhone || customerPhone.trim().length < 10) ? (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-700 mt-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Phone number is required for dispatch, delivery coordination, and SMS tracking.</span>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      Our dispatch team will use this number for order confirmation and delivery coordination.
+                    </p>
+                  )}
+                </div>
               </div>
             </Card>
           </div>

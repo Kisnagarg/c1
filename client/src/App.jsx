@@ -28,6 +28,7 @@ import AdminProductForm from './pages/admin/AdminProductForm';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminSecurity from './pages/admin/AdminSecurity';
 
 // Layout Wrappers
 const MainLayout = ({ children }) => (
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="bookings" element={<AdminBookings />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="security" element={<AdminSecurity />} />
           </Route>
         </Routes>
       </BrowserRouter>

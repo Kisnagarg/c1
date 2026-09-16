@@ -4,7 +4,22 @@ const Product = require('../models/Product');
 // Create a booking
 exports.createBooking = async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, phone } = req.body;
+
+    // Validate customer phone number (mandatory)
+    let customerPhone = req.user.phone;
+    if ((!customerPhone || customerPhone.trim().length < 10) && phone && phone.trim().length >= 10) {
+      req.user.phone = phone.trim();
+      await req.user.save();
+      customerPhone = req.user.phone;
+    }
+
+    if (!customerPhone || customerPhone.trim().length < 10) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Customer phone number is mandatory (min. 10 digits) to complete booking.' 
+      });
+    }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ success: false, message: 'At least one item is required.' });

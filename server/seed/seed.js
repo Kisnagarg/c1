@@ -6,501 +6,475 @@ const Category = require('../models/Category');
 const Product = require('../models/Product');
 const Booking = require('../models/Booking');
 
-const categories = [
+// The 8 initial categories required for the client project
+const categoriesData = [
   {
-    name: 'Electronics',
-    description: 'Discover the latest gadgets, devices, and tech essentials for your digital lifestyle.',
-    image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=300&fit=crop'
+    name: 'Drones',
+    description: 'High-performance camera drones, mini drones, and professional aerial photography gear.',
+    image: 'https://images.unsplash.com/photo-1507582020434-97210e740b79?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 1,
+    isActive: true
   },
   {
-    name: 'Books',
-    description: 'Explore bestsellers, classics, and hidden gems across every genre imaginable.',
-    image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=300&fit=crop'
+    name: 'Toys & Monster Trucks',
+    description: 'Rugged 4x4 monster trucks, die-cast vehicles, and exciting durable play sets for all ages.',
+    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 2,
+    isActive: true
   },
   {
-    name: 'Accessories',
-    description: 'Complete your look with premium watches, bags, wallets, and everyday carry essentials.',
-    image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&h=300&fit=crop'
+    name: 'Bulbs & Tubes',
+    description: 'Energy-saving LED smart bulbs, ambient tube lights, and architectural lighting solutions.',
+    image: 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 3,
+    isActive: true
   },
   {
-    name: 'Clothing',
-    description: 'Stay stylish with trending fashion for men and women, from casual to formal wear.',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop'
+    name: 'Wires & Cables',
+    description: 'Heavy-duty electrical wires, shielded copper conduits, and domestic wiring essentials.',
+    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 4,
+    isActive: true
   },
   {
-    name: 'Sports',
-    description: 'Gear up with top-quality sports equipment, fitness accessories, and activewear.',
-    image: 'https://images.unsplash.com/photo-1461896836934-ber7fc2d4fc5?w=400&h=300&fit=crop'
+    name: 'Chargers',
+    description: 'Ultra-fast GaN power adapters, multi-device charging docks, and universal mobile chargers.',
+    image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 5,
+    isActive: true
   },
   {
-    name: 'Home & Kitchen',
-    description: 'Transform your space with smart home gadgets, decor, and kitchen essentials.',
-    image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop'
+    name: 'RC Toys',
+    description: 'Remote-controlled racing cars, acrobatic helicopters, drift vehicles, and speed boats.',
+    image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 6,
+    isActive: true
+  },
+  {
+    name: 'Mixers & Kitchen Appliances',
+    description: 'High-speed blender mixers, multi-jar food processors, and heavy-duty kitchen appliances.',
+    image: 'https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 7,
+    isActive: true
+  },
+  {
+    name: 'Others',
+    description: 'Versatile electronic accessories, everyday utility essentials, and lifestyle tech gadgets.',
+    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80',
+    displayOrder: 8,
+    isActive: true
   }
 ];
 
+const sampleProductsByCategory = {
+  'Drones': [
+    {
+      name: 'SkyHawk 4K Ultra HD Drone',
+      description: 'Foldable GPS camera drone with 3-axis gimbal, 35-min flight time, and auto-return feature.',
+      detailedDescription: 'The SkyHawk 4K Ultra HD Drone delivers stunning cinematic aerial footage with its Sony CMOS sensor, 4K 60fps recording, and level-6 wind resistance. Equipped with smart obstacle avoidance sensors, GPS geofencing, and 10km video transmission, it is ideal for both creators and commercial surveying.',
+      price: 49999,
+      stock: 12,
+      image: 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1507582020434-97210e740b79?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Camera', value: '4K Ultra HD 60fps' },
+        { key: 'Flight Time', value: '35 Minutes' },
+        { key: 'Transmission Range', value: '10 Kilometers' },
+        { key: 'Gimbal', value: '3-Axis Mechanical Stabilization' }
+      ],
+      ratingAvg: 4.8,
+      ratingCount: 34
+    },
+    {
+      name: 'AeroMini Pocket Stunt Drone',
+      description: 'Compact beginner-friendly drone with altitude hold, 360-degree flips, and 1080p camera.',
+      detailedDescription: 'Perfect for beginners and drone enthusiasts, the AeroMini features headless mode, one-key takeoff and landing, and durable propeller guards designed to survive accidental drops.',
+      price: 7499,
+      stock: 25,
+      image: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Resolution', value: '1080p Full HD' },
+        { key: 'Flight Time', value: '18 Minutes per battery' },
+        { key: 'Features', value: '360° Flips, Altitude Hold' }
+      ],
+      ratingAvg: 4.5,
+      ratingCount: 19
+    }
+  ],
+  'Toys & Monster Trucks': [
+    {
+      name: 'Titan 4WD Rock Crawler Monster Truck',
+      description: 'Giant scale 1:12 off-road rock crawler with independent suspension and dual-motor torque.',
+      detailedDescription: 'Conquer mud, gravel, and rough terrain with the Titan 4WD. Engineered with high-torque magnetic motors, metal shock absorbers, and anti-skid rubber oversized tires.',
+      price: 3499,
+      stock: 18,
+      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Scale', value: '1:12 Scale' },
+        { key: 'Drive', value: '4-Wheel Drive (4WD)' },
+        { key: 'Battery', value: '7.4V 1200mAh Li-ion' },
+        { key: 'Top Speed', value: '25 km/h' }
+      ],
+      ratingAvg: 4.7,
+      ratingCount: 42
+    },
+    {
+      name: 'Blaze Inferno Stunt Car',
+      description: 'Double-sided 360 rotation tumbler car with LED lights and crash-resistant casing.',
+      detailedDescription: 'Built for intense indoor and outdoor action. Performs thrilling flips, 360-degree spins, and continues driving even when flipped upside down.',
+      price: 1899,
+      stock: 4, // low stock test
+      image: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Rotation', value: '360° Double-Sided Tumbling' },
+        { key: 'Lighting', value: 'Dual LED Headlights' }
+      ],
+      ratingAvg: 4.3,
+      ratingCount: 15
+    }
+  ],
+  'Bulbs & Tubes': [
+    {
+      name: 'Lumina Smart RGBW LED Bulb (12W)',
+      description: '16 Million colors, voice control with Alexa/Google Home, and dimmable warmth settings.',
+      detailedDescription: 'Transform any room with Lumina Smart RGBW. Connects directly via WiFi without a hub. Supports custom schedules, music syncing, and energy monitoring.',
+      price: 899,
+      stock: 80,
+      image: 'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Wattage', value: '12W (Equivalent to 100W incandescent)' },
+        { key: 'Base', value: 'B22 / E27' },
+        { key: 'Color Spectrum', value: '16 Million Colors + Warm/Cool White' }
+      ],
+      ratingAvg: 4.6,
+      ratingCount: 68
+    },
+    {
+      name: 'BrightLite 20W LED Batten Tube Light',
+      description: 'Glare-free cool daylight tube light with surge protection and ultra-slim aluminum housing.',
+      detailedDescription: 'Industrial grade 20W LED batten delivering 2400 lumens with zero flicker. Ideal for homes, offices, retail spaces, and workshops.',
+      price: 499,
+      stock: 45,
+      image: 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Lumen Output', value: '2400 Lumens' },
+        { key: 'Length', value: '4 Feet (120cm)' },
+        { key: 'Surge Protection', value: 'Up to 4kV' }
+      ],
+      ratingAvg: 4.4,
+      ratingCount: 29
+    }
+  ],
+  'Wires & Cables': [
+    {
+      name: 'VoltSafe 2.5 sq.mm FR Industrial Copper Wire (90m)',
+      description: 'Flame retardant 100% electrolytic pure copper wire spool for domestic and commercial wiring.',
+      detailedDescription: 'IS-certified 2.5mm multi-strand copper cable with advanced flame-retardant PVC insulation. Engineered to resist heat, voltage spikes, and wear.',
+      price: 2699,
+      stock: 30,
+      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Gauge', value: '2.5 sq mm' },
+        { key: 'Length', value: '90 Metres' },
+        { key: 'Insulation', value: 'Flame Retardant (FR) Grade PVC' }
+      ],
+      ratingAvg: 4.9,
+      ratingCount: 51
+    },
+    {
+      name: 'ShieldPro Cat6 High-Speed Ethernet Cable (20m)',
+      description: 'Gigabit 1000Mbps gold-plated RJ45 network patch cord with anti-interference shielding.',
+      detailedDescription: 'High-bandwidth Cat6 patch cord capable of handling up to 10Gbps transmission with zero packet drop. Snagless design with molded strain-relief boots.',
+      price: 649,
+      stock: 50,
+      image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Category', value: 'Cat 6' },
+        { key: 'Length', value: '20 Metres' },
+        { key: 'Bandwidth', value: 'Up to 550 MHz' }
+      ],
+      ratingAvg: 4.7,
+      ratingCount: 38
+    }
+  ],
+  'Chargers': [
+    {
+      name: 'PowerVolt 65W GaN Fast Charger',
+      description: 'Compact 3-port GaN III wall charger supporting Type-C PD 3.0 and QC 4.0 for laptops and phones.',
+      detailedDescription: 'Powered by Gallium Nitride (GaN) technology, this ultra-portable 65W brick charges a MacBook Pro to 50% in 30 minutes, along with smartphones and tablets simultaneously.',
+      price: 2499,
+      stock: 22,
+      image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Total Output', value: '65W Max' },
+        { key: 'Ports', value: '2x USB-C + 1x USB-A' },
+        { key: 'Technology', value: 'GaN III Fast Charging' }
+      ],
+      ratingAvg: 4.8,
+      ratingCount: 74
+    },
+    {
+      name: 'MagCharge 3-in-1 Magnetic Wireless Station',
+      description: 'Foldable 15W wireless charging stand for iPhone, Apple Watch, and AirPods simultaneously.',
+      detailedDescription: 'Clean up your desk with MagCharge. Strong built-in magnets ensure snap-on alignment with horizontal and vertical viewing modes.',
+      price: 3299,
+      stock: 14,
+      image: 'https://images.unsplash.com/photo-1622445262464-84b1456045b6?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1622445262464-84b1456045b6?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Wireless Output', value: '15W / 5W / 3W' },
+        { key: 'Compatibility', value: 'MagSafe and Qi-enabled devices' }
+      ],
+      ratingAvg: 4.6,
+      ratingCount: 31
+    }
+  ],
+  'RC Toys': [
+    {
+      name: 'SpeedDemon 1:16 High-Speed RC Drift Car',
+      description: '2.4GHz 40km/h remote control drift car with spare drift tires, gyro assist, and LED headlights.',
+      detailedDescription: 'Engineered for high-speed drifting thrills. Comes with an electronic stability control gyro, proportional steering, and interchangeable rally and drift tires.',
+      price: 4599,
+      stock: 11,
+      image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Top Speed', value: '40 km/h' },
+        { key: 'Frequency', value: '2.4 GHz Anti-Jamming' },
+        { key: 'Control Distance', value: 'Up to 80 Metres' }
+      ],
+      ratingAvg: 4.7,
+      ratingCount: 26
+    },
+    {
+      name: 'SkyHover RC Aerobatic Helicopter',
+      description: 'Dual rotor indoor/outdoor alloy helicopter with auto-hover gyro and crash protection.',
+      detailedDescription: 'Built with an alloy frame for superior durability against bumps and crashes. Features one-button altitude hold and emergency stop for effortless flying.',
+      price: 2999,
+      stock: 3, // low stock test
+      image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Channels', value: '3.5 Channel with Gyro' },
+        { key: 'Flight Time', value: '12-15 Minutes' }
+      ],
+      ratingAvg: 4.2,
+      ratingCount: 14
+    }
+  ],
+  'Mixers & Kitchen Appliances': [
+    {
+      name: 'MasterChef 1000W Heavy-Duty Mixer Grinder',
+      description: 'Copper motor mixer with 3 stainless steel jars, pulse control, and overload protector.',
+      detailedDescription: 'Crush the toughest spices, batters, and purees effortlessly with the MasterChef 1000W. Features stainless steel flow-breaker jars and self-lubricating nylon couplers.',
+      price: 4999,
+      stock: 16,
+      image: 'https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Motor', value: '1000W 100% Pure Copper' },
+        { key: 'Jars', value: '1.5L Wet, 1.0L Dry, 0.4L Chutney' },
+        { key: 'Speed Settings', value: '3 Speeds + Pulse' }
+      ],
+      ratingAvg: 4.9,
+      ratingCount: 88
+    },
+    {
+      name: 'NutriBlend 500W Smoothie Maker & Blender',
+      description: 'High-speed single-serve bullet blender with 2 travel cups and extract blades.',
+      detailedDescription: 'Extract maximum nutrition from whole fruits, nuts, and veggies in 30 seconds. Includes 2 BPA-free portable sipper cups for active lifestyles.',
+      price: 2799,
+      stock: 20,
+      image: 'https://images.unsplash.com/photo-1589733955941-5eeaf752f6dd?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1589733955941-5eeaf752f6dd?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'RPM', value: '22,000 RPM' },
+        { key: 'Blade', value: '4-Wing Stainless Steel Cross Blade' }
+      ],
+      ratingAvg: 4.5,
+      ratingCount: 39
+    }
+  ],
+  'Others': [
+    {
+      name: 'OmniPlug Universal Travel Power Adapter',
+      description: 'All-in-one worldwide international adapter with 4 USB ports and Type-C 30W output.',
+      detailedDescription: 'Works in more than 150 countries including US, UK, EU, AU, and Asia. Features built-in safety shutters and dual 8A auto-resetting fuses.',
+      price: 1499,
+      stock: 35,
+      image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Global Compatibility', value: 'US, UK, EU, AU & 150+ Countries' },
+        { key: 'USB Output', value: '3x USB-A + 1x Type-C 30W' }
+      ],
+      ratingAvg: 4.6,
+      ratingCount: 52
+    },
+    {
+      name: 'SmartPlug WiFi Energy Monitoring Socket (16A)',
+      description: 'Schedule appliances, track power consumption, and control via mobile app from anywhere.',
+      detailedDescription: 'Turn any heavy home appliance like geysers or air conditioners into a smart device. Set automated timers and monitor real-time electricity bills.',
+      price: 999,
+      stock: 40,
+      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80'
+      ],
+      specifications: [
+        { key: 'Current Rating', value: '16 Amperes (Up to 3500W)' },
+        { key: 'App Control', value: 'Smart Life / Tuya / Alexa / Google' }
+      ],
+      ratingAvg: 4.4,
+      ratingCount: 22
+    }
+  ]
+};
+
 const seedDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bookmart';
+    await mongoose.connect(mongoURI);
+    console.log('✅ Connected to MongoDB for seeding');
 
-    // Clear existing data
+    // Clear existing collections
     await Promise.all([
       User.deleteMany({}),
       Category.deleteMany({}),
       Product.deleteMany({}),
       Booking.deleteMany({})
     ]);
-    console.log('🗑️  Cleared existing data');
+    console.log('🗑️  Cleared existing collections');
 
-    // Create admin user
+    // Create production admin user
     const admin = await User.create({
-      name: 'Admin User',
-      email: 'admin@bookmart.com',
+      name: 'Rathore Electronics Admin',
+      email: 'admin@rathoreelectronics.com',
       password: 'admin123',
-      phone: '+1-555-0100',
-      role: 'admin'
+      phone: '+91 9876543210',
+      role: 'admin',
+      isActive: true
     });
-    console.log('👤 Admin user created: admin@bookmart.com / admin123');
+    console.log('👤 Admin user created: admin@rathoreelectronics.com');
 
-    // Create demo user
-    const demoUser = await User.create({
-      name: 'John Doe',
-      email: 'user@demo.com',
-      password: 'user123',
-      phone: '+1-555-0200',
-      role: 'user'
+    // Create sample customer user
+    const customer = await User.create({
+      name: 'Rohit Sharma',
+      email: 'rohit@example.com',
+      password: 'password123',
+      phone: '+91 9876500000',
+      role: 'user',
+      isActive: true
     });
-    console.log('👤 Demo user created: user@demo.com / user123');
+    console.log('👤 Sample customer created: rohit@example.com');
 
-    // Create categories
-    const createdCategories = await Category.insertMany(categories);
-    const catMap = {};
-    createdCategories.forEach(c => { catMap[c.name] = c._id; });
-    console.log(`📁 ${createdCategories.length} categories created`);
+    // Insert the 8 initial categories
+    const createdCategories = {};
+    for (const cat of categoriesData) {
+      const created = await Category.create(cat);
+      createdCategories[cat.name] = created;
+    }
+    console.log(`📂 Created ${Object.keys(createdCategories).length} initial categories`);
 
-    // Create products
-    const products = [
-      // Electronics
-      {
-        name: 'Sony WH-1000XM5 Wireless Headphones',
-        description: 'Industry-leading noise cancellation with exceptional sound quality and all-day comfort.',
-        detailedDescription: 'Experience the next level of silence with the Sony WH-1000XM5. Featuring two processors controlling 8 microphones, Auto NC Optimizer, and 30-hour battery life. The soft-fit leather design provides unmatched comfort for extended listening sessions. Supports LDAC for high-resolution wireless audio and multipoint connection for seamless device switching.',
-        category: catMap['Electronics'],
-        price: 299.99,
-        stock: 45,
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Driver Size', value: '30mm' },
-          { key: 'Battery Life', value: '30 hours' },
-          { key: 'Noise Cancellation', value: 'Active (ANC)' },
-          { key: 'Connectivity', value: 'Bluetooth 5.2' },
-          { key: 'Weight', value: '250g' }
-        ],
-        ratingAvg: 4.7,
-        ratingCount: 1284
-      },
-      {
-        name: 'Apple iPad Air M2',
-        description: 'Supercharged by the M2 chip with a stunning 11-inch Liquid Retina display.',
-        detailedDescription: 'The iPad Air features the powerful M2 chip delivering next-level performance. The 11-inch Liquid Retina display with P3 wide color and True Tone makes everything look stunning. Works with Apple Pencil Pro and Magic Keyboard for the ultimate creative and productivity experience.',
-        category: catMap['Electronics'],
-        price: 599.00,
-        stock: 30,
-        image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Chip', value: 'Apple M2' },
-          { key: 'Display', value: '11" Liquid Retina' },
-          { key: 'Storage', value: '128GB' },
-          { key: 'Camera', value: '12MP Wide' },
-          { key: 'Battery', value: 'Up to 10 hours' }
-        ],
-        ratingAvg: 4.8,
-        ratingCount: 856
-      },
-      {
-        name: 'Samsung Galaxy Watch 6',
-        description: 'Advanced health monitoring and fitness tracking in an elegant smartwatch design.',
-        detailedDescription: 'The Galaxy Watch 6 combines sophisticated design with comprehensive health features. Track your heart rate, sleep patterns, body composition, and workouts with precision. Features a vibrant Super AMOLED display, Wear OS powered by Samsung, and up to 40 hours of battery life.',
-        category: catMap['Electronics'],
-        price: 329.99,
-        stock: 25,
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Display', value: '1.5" Super AMOLED' },
-          { key: 'OS', value: 'Wear OS' },
-          { key: 'Battery', value: '40 hours' },
-          { key: 'Water Resistance', value: '5ATM + IP68' },
-          { key: 'Sensors', value: 'BioActive, Temp, GPS' }
-        ],
-        ratingAvg: 4.5,
-        ratingCount: 672
-      },
-      {
-        name: 'JBL Charge 5 Portable Speaker',
-        description: 'Powerful JBL Original Pro Sound with IP67 waterproof and dustproof rating.',
-        detailedDescription: 'JBL Charge 5 delivers bold sound with its optimized long-excursion driver and dual JBL bass radiators. The IP67 waterproof and dustproof design lets you take it anywhere. With 20 hours of playtime and a built-in powerbank, the party never stops.',
-        category: catMap['Electronics'],
-        price: 179.95,
-        stock: 60,
-        image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Output Power', value: '40W' },
-          { key: 'Battery Life', value: '20 hours' },
-          { key: 'Waterproof', value: 'IP67' },
-          { key: 'Bluetooth', value: '5.1' },
-          { key: 'Weight', value: '960g' }
-        ],
-        ratingAvg: 4.6,
-        ratingCount: 2341
-      },
-      // Books
-      {
-        name: 'Atomic Habits by James Clear',
-        description: 'An easy and proven way to build good habits and break bad ones. #1 New York Times bestseller.',
-        detailedDescription: 'No matter your goals, Atomic Habits offers a proven framework for improving every day. James Clear reveals practical strategies that will teach you exactly how to form good habits, break bad ones, and master the tiny behaviors that lead to remarkable results. With over 15 million copies sold worldwide.',
-        category: catMap['Books'],
-        price: 15.99,
-        stock: 200,
-        image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Author', value: 'James Clear' },
-          { key: 'Pages', value: '320' },
-          { key: 'Format', value: 'Paperback' },
-          { key: 'Language', value: 'English' },
-          { key: 'ISBN', value: '978-0735211292' }
-        ],
-        ratingAvg: 4.9,
-        ratingCount: 94521
-      },
-      {
-        name: 'The Psychology of Money',
-        description: 'Timeless lessons on wealth, greed, and happiness by Morgan Housel.',
-        detailedDescription: 'Doing well with money isn\'t necessarily about what you know. It\'s about how you behave. Morgan Housel shares 19 short stories exploring the strange ways people think about money and teaches you how to make better sense of one of life\'s most important topics.',
-        category: catMap['Books'],
-        price: 14.49,
-        stock: 150,
-        image: 'https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Author', value: 'Morgan Housel' },
-          { key: 'Pages', value: '256' },
-          { key: 'Format', value: 'Paperback' },
-          { key: 'Language', value: 'English' },
-          { key: 'ISBN', value: '978-0857197689' }
-        ],
-        ratingAvg: 4.7,
-        ratingCount: 56230
-      },
-      {
-        name: 'Deep Work by Cal Newport',
-        description: 'Rules for focused success in a distracted world. Transform your productivity.',
-        detailedDescription: 'Deep Work proposes that the ability to focus without distraction on a cognitively demanding task is becoming increasingly rare and valuable. Cal Newport flips the narrative on impact in a connected age, arguing that deep work is like a superpower in our increasingly competitive economy.',
-        category: catMap['Books'],
-        price: 13.99,
-        stock: 120,
-        image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Author', value: 'Cal Newport' },
-          { key: 'Pages', value: '296' },
-          { key: 'Format', value: 'Paperback' },
-          { key: 'Language', value: 'English' },
-          { key: 'ISBN', value: '978-0349411903' }
-        ],
-        ratingAvg: 4.6,
-        ratingCount: 28450
-      },
-      // Accessories
-      {
-        name: 'Premium Leather Laptop Sleeve',
-        description: 'Handcrafted genuine leather sleeve for 13-14 inch laptops. Slim and protective.',
-        detailedDescription: 'Crafted from full-grain vegetable-tanned leather, this sleeve provides elegant protection for your laptop. Features a soft microfiber lining, magnetic closure, and an external pocket for accessories. Fits MacBook Air/Pro 13-14 inch and similar-sized laptops.',
-        category: catMap['Accessories'],
-        price: 49.99,
-        stock: 80,
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Material', value: 'Full-grain Leather' },
-          { key: 'Compatibility', value: '13-14" Laptops' },
-          { key: 'Closure', value: 'Magnetic' },
-          { key: 'Lining', value: 'Microfiber' },
-          { key: 'Color', value: 'Cognac Brown' }
-        ],
-        ratingAvg: 4.4,
-        ratingCount: 342
-      },
-      {
-        name: 'Minimalist Canvas Backpack',
-        description: 'Water-resistant canvas daypack with padded laptop compartment and anti-theft design.',
-        detailedDescription: 'This minimalist backpack combines style with functionality. Made from water-resistant canvas with a padded 15.6" laptop compartment, hidden anti-theft pocket, and USB charging port. Perfect for daily commute, travel, or campus life. Ergonomic shoulder straps ensure all-day comfort.',
-        category: catMap['Accessories'],
-        price: 64.99,
-        stock: 55,
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Material', value: 'Water-resistant Canvas' },
-          { key: 'Capacity', value: '25L' },
-          { key: 'Laptop Fit', value: 'Up to 15.6"' },
-          { key: 'USB Port', value: 'Yes' },
-          { key: 'Weight', value: '680g' }
-        ],
-        ratingAvg: 4.3,
-        ratingCount: 567
-      },
-      {
-        name: 'Classic Aviator Sunglasses',
-        description: 'Polarized UV400 aviator sunglasses with titanium frame and scratch-resistant lenses.',
-        detailedDescription: 'These premium aviator sunglasses feature polarized UV400 lenses that eliminate glare and protect your eyes. The ultra-lightweight titanium frame provides durability without the weight. Includes a premium leather case and microfiber cleaning cloth.',
-        category: catMap['Accessories'],
-        price: 89.99,
-        stock: 40,
-        image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Lens Type', value: 'Polarized UV400' },
-          { key: 'Frame Material', value: 'Titanium' },
-          { key: 'Lens Width', value: '58mm' },
-          { key: 'Weight', value: '28g' },
-          { key: 'Includes', value: 'Case + Cloth' }
-        ],
-        ratingAvg: 4.5,
-        ratingCount: 891
-      },
-      // Clothing
-      {
-        name: 'Nike Air Max 270 Running Shoes',
-        description: 'Iconic lifestyle sneakers with Max Air unit for unbelievable all-day comfort.',
-        detailedDescription: 'The Nike Air Max 270 delivers visible cushioning under every step. Its large window showcases Nike\'s biggest Air unit yet for a supersoft ride that feels as impossible as it looks. The sleek design and breathable mesh upper make it perfect for both running and everyday wear.',
-        category: catMap['Clothing'],
-        price: 129.99,
-        stock: 35,
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Type', value: 'Running / Lifestyle' },
-          { key: 'Cushioning', value: 'Max Air 270' },
-          { key: 'Upper', value: 'Breathable Mesh' },
-          { key: 'Sole', value: 'Rubber' },
-          { key: 'Available Sizes', value: '7-13 US' }
-        ],
-        ratingAvg: 4.6,
-        ratingCount: 4523
-      },
-      {
-        name: 'Premium Cotton Crew T-Shirt Pack',
-        description: 'Set of 3 ultra-soft 100% organic cotton t-shirts in essential neutral colors.',
-        detailedDescription: 'Upgrade your basics with our premium organic cotton crew neck t-shirts. Each pack includes 3 shirts in Black, White, and Navy. Made from 180 GSM ring-spun cotton for a perfect drape and lasting softness. Pre-shrunk and machine washable. Reinforced seams for durability.',
-        category: catMap['Clothing'],
-        price: 39.99,
-        stock: 100,
-        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Material', value: '100% Organic Cotton' },
-          { key: 'Weight', value: '180 GSM' },
-          { key: 'Pack', value: '3 Shirts' },
-          { key: 'Colors', value: 'Black, White, Navy' },
-          { key: 'Sizes', value: 'S - XXL' }
-        ],
-        ratingAvg: 4.4,
-        ratingCount: 1876
-      },
-      {
-        name: 'Slim Fit Stretch Chino Pants',
-        description: 'Versatile stretch chinos with a modern slim fit. Perfect for work or weekend.',
-        detailedDescription: 'These premium chinos feature a blend of cotton and elastane for comfortable stretch throughout the day. The slim fit silhouette is tailored without being tight. Available in multiple colors, these pants transition seamlessly from office to dinner.',
-        category: catMap['Clothing'],
-        price: 54.99,
-        stock: 70,
-        image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Material', value: '98% Cotton, 2% Elastane' },
-          { key: 'Fit', value: 'Slim' },
-          { key: 'Rise', value: 'Mid-Rise' },
-          { key: 'Closure', value: 'Zip Fly + Button' },
-          { key: 'Sizes', value: '28 - 40 Waist' }
-        ],
-        ratingAvg: 4.3,
-        ratingCount: 923
-      },
-      // Sports
-      {
-        name: 'Professional Yoga Mat',
-        description: 'Extra thick 6mm non-slip yoga mat with alignment lines and carrying strap.',
-        detailedDescription: 'Elevate your practice with our professional-grade yoga mat. The 6mm thickness provides perfect cushioning for joints while maintaining stability. Dual-layer technology ensures a non-slip surface even during hot yoga. Laser-etched alignment lines help perfect your poses.',
-        category: catMap['Sports'],
-        price: 34.99,
-        stock: 90,
-        image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Thickness', value: '6mm' },
-          { key: 'Material', value: 'TPE (Eco-friendly)' },
-          { key: 'Size', value: '183cm x 61cm' },
-          { key: 'Non-slip', value: 'Dual-layer' },
-          { key: 'Includes', value: 'Carrying Strap' }
-        ],
-        ratingAvg: 4.5,
-        ratingCount: 2134
-      },
-      {
-        name: 'Adjustable Dumbbell Set 5-25 lbs',
-        description: 'Space-saving adjustable dumbbells replacing 5 sets of weights. Quick-change mechanism.',
-        detailedDescription: 'Transform your home gym with these innovative adjustable dumbbells. Quickly switch between 5, 10, 15, 20, and 25 lbs with the twist-lock mechanism. Compact design replaces an entire rack of dumbbells. Ergonomic handle with soft-grip coating for comfortable, secure workouts.',
-        category: catMap['Sports'],
-        price: 199.99,
-        stock: 20,
-        image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Weight Range', value: '5-25 lbs per dumbbell' },
-          { key: 'Increments', value: '5 lb' },
-          { key: 'Mechanism', value: 'Twist-lock' },
-          { key: 'Handle', value: 'Ergonomic Soft-grip' },
-          { key: 'Set Includes', value: '2 Dumbbells + Stand' }
-        ],
-        ratingAvg: 4.7,
-        ratingCount: 456
-      },
-      {
-        name: 'Resistance Bands Set (5 Pack)',
-        description: 'Professional-grade latex resistance bands with 5 resistance levels and accessories.',
-        detailedDescription: 'Complete your home workout setup with this premium resistance bands set. Includes 5 color-coded bands ranging from 10-50 lbs of resistance. Made from natural latex for durability and snap resistance. Set includes door anchor, ankle straps, handles, and a carrying bag.',
-        category: catMap['Sports'],
-        price: 29.99,
-        stock: 150,
-        image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Bands', value: '5 (10-50 lbs)' },
-          { key: 'Material', value: 'Natural Latex' },
-          { key: 'Accessories', value: 'Handles, Anchor, Straps' },
-          { key: 'Carry Bag', value: 'Included' },
-          { key: 'Use', value: 'Full Body Workout' }
-        ],
-        ratingAvg: 4.4,
-        ratingCount: 3456
-      },
-      // Home & Kitchen
-      {
-        name: 'Smart LED Desk Lamp',
-        description: 'Touch-controlled LED desk lamp with wireless charging pad and USB port.',
-        detailedDescription: 'This multifunctional desk lamp combines brilliant illumination with modern convenience. Features 5 color temperatures, 7 brightness levels, and a built-in Qi wireless charging pad. The flexible gooseneck allows precise light positioning. Touch controls and a 1-hour auto-off timer make it effortless to use.',
-        category: catMap['Home & Kitchen'],
-        price: 45.99,
-        stock: 65,
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Light Source', value: 'LED' },
-          { key: 'Color Temps', value: '5 Modes (2700K-6500K)' },
-          { key: 'Wireless Charging', value: 'Qi Compatible' },
-          { key: 'USB Port', value: 'Yes' },
-          { key: 'Timer', value: '1-hour auto-off' }
-        ],
-        ratingAvg: 4.3,
-        ratingCount: 789
-      },
-      {
-        name: 'French Press Coffee Maker',
-        description: 'Double-walled stainless steel French press for perfectly brewed coffee every time.',
-        detailedDescription: 'Brew barista-quality coffee at home with our premium French press. The double-walled stainless steel construction keeps coffee hot for hours while staying cool to the touch. The 4-level filtration system ensures a clean, grit-free cup every time. Dishwasher safe and built to last.',
-        category: catMap['Home & Kitchen'],
-        price: 32.99,
-        stock: 85,
-        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Material', value: 'Stainless Steel (18/10)' },
-          { key: 'Capacity', value: '34 oz / 1 Liter' },
-          { key: 'Insulation', value: 'Double-walled' },
-          { key: 'Filter', value: '4-level filtration' },
-          { key: 'Dishwasher Safe', value: 'Yes' }
-        ],
-        ratingAvg: 4.6,
-        ratingCount: 1567
-      },
-      {
-        name: 'Bamboo Cutting Board Set',
-        description: 'Set of 3 organic bamboo cutting boards with juice groove and easy-grip handles.',
-        detailedDescription: 'Upgrade your kitchen with this beautiful set of 3 organic bamboo cutting boards. Available in small, medium, and large sizes to handle any prep task. Features deep juice grooves, easy-grip handles, and a naturally antimicrobial surface. Bamboo is 16% harder than maple, ensuring lasting durability.',
-        category: catMap['Home & Kitchen'],
-        price: 24.99,
-        stock: 110,
-        image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop',
-        specifications: [
-          { key: 'Material', value: 'Organic Bamboo' },
-          { key: 'Set', value: '3 Boards (S/M/L)' },
-          { key: 'Features', value: 'Juice Groove, Handles' },
-          { key: 'Antimicrobial', value: 'Natural' },
-          { key: 'Maintenance', value: 'Hand Wash, Oil Monthly' }
-        ],
-        ratingAvg: 4.5,
-        ratingCount: 2890
+    // Insert sample products for each category
+    let productCount = 0;
+    const createdProductList = [];
+    for (const [categoryName, products] of Object.entries(sampleProductsByCategory)) {
+      const categoryDoc = createdCategories[categoryName];
+      if (!categoryDoc) continue;
+
+      for (const prodData of products) {
+        const prod = await Product.create({
+          ...prodData,
+          category: categoryDoc._id,
+          isAvailable: prodData.stock > 0,
+          isActive: true
+        });
+        createdProductList.push(prod);
+        productCount++;
       }
-    ];
+    }
+    console.log(`📦 Created ${productCount} sample products across all 8 categories`);
 
-    const createdProducts = await Product.insertMany(products);
-    console.log(`📦 ${createdProducts.length} products created`);
-
-    // Create demo bookings
-    const bookings = [
-      {
-        bookingId: 'BK-DM001',
-        user: demoUser._id,
+    // Create a sample booking to populate dashboard stats
+    if (createdProductList.length >= 2) {
+      const booking = await Booking.create({
+        bookingId: Booking.generateBookingId(),
+        user: customer._id,
         items: [
           {
-            product: createdProducts[0]._id,
-            name: createdProducts[0].name,
-            price: createdProducts[0].price,
+            product: createdProductList[0]._id,
+            name: createdProductList[0].name,
+            price: createdProductList[0].price,
             quantity: 1,
-            image: createdProducts[0].image
-          }
-        ],
-        totalAmount: createdProducts[0].price,
-        status: 'completed'
-      },
-      {
-        bookingId: 'BK-DM002',
-        user: demoUser._id,
-        items: [
-          {
-            product: createdProducts[4]._id,
-            name: createdProducts[4].name,
-            price: createdProducts[4].price,
-            quantity: 2,
-            image: createdProducts[4].image
+            image: createdProductList[0].image
           },
           {
-            product: createdProducts[14]._id,
-            name: createdProducts[14].name,
-            price: createdProducts[14].price,
-            quantity: 1,
-            image: createdProducts[14].image
+            product: createdProductList[2]._id,
+            name: createdProductList[2].name,
+            price: createdProductList[2].price,
+            quantity: 2,
+            image: createdProductList[2].image
           }
         ],
-        totalAmount: (createdProducts[4].price * 2) + createdProducts[14].price,
-        status: 'confirmed'
-      },
-      {
-        bookingId: 'BK-DM003',
-        user: demoUser._id,
-        items: [
-          {
-            product: createdProducts[10]._id,
-            name: createdProducts[10].name,
-            price: createdProducts[10].price,
-            quantity: 1,
-            image: createdProducts[10].image
-          }
-        ],
-        totalAmount: createdProducts[10].price,
-        status: 'pending'
-      }
-    ];
+        totalAmount: createdProductList[0].price + (createdProductList[2].price * 2),
+        status: 'confirmed',
+        notes: 'Please expedite delivery to home address.'
+      });
+      console.log(`🛒 Sample booking created: ${booking.bookingId}`);
+    }
 
-    await Booking.insertMany(bookings);
-    console.log('📋 3 demo bookings created');
+    console.log('\n✨ Database seeding completed successfully!');
+    console.log('----------------------------------------------------');
+    console.log('🔑 Admin Credentials:');
+    console.log('   Email:    admin@rathoreelectronics.com');
+    console.log('   Password: admin123');
+    console.log('----------------------------------------------------');
 
-    console.log('\n✅ Database seeded successfully!');
-    console.log('\n📌 Login Credentials:');
-    console.log('   Admin: admin@bookmart.com / admin123');
-    console.log('   User:  user@demo.com / user123');
-    
+    await mongoose.disconnect();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Seed error:', error);
+    console.error('❌ Seeding error:', error);
     process.exit(1);
   }
 };
