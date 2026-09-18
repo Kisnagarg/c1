@@ -15,8 +15,10 @@ import {
   Eye, 
   ShieldCheck, 
   AlertCircle,
-  MessageSquare
+  MessageSquare,
+  ExternalLink
 } from 'lucide-react';
+import InstagramIcon from '../../components/ui/InstagramIcon';
 import API from '../../api/axios';
 import { useSettings } from '../../context/SettingsContext';
 import Card from '../../components/ui/Card';
@@ -40,6 +42,8 @@ export default function AdminSettings() {
     email: '',
     upiId: '',
     upiQrImage: '',
+    instagramUrl: '',
+    instagramHandle: '',
     advanceAmount: 200
   });
 
@@ -57,6 +61,8 @@ export default function AdminSettings() {
             email: res.data.settings.email || 'support@rathoreelectronics.com',
             upiId: res.data.settings.upiId || '8435930113@upi',
             upiQrImage: res.data.settings.upiQrImage || '',
+            instagramUrl: res.data.settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/',
+            instagramHandle: res.data.settings.instagramHandle || '@rathore_electronics_',
             advanceAmount: res.data.settings.advanceAmount !== undefined ? res.data.settings.advanceAmount : 200
           });
         }
@@ -254,7 +260,69 @@ export default function AdminSettings() {
           </div>
         </Card>
 
-        {/* Section 2: Advance Payment & UPI QR Code */}
+        {/* Section 2: Social Media & Instagram Presence */}
+        <Card className="p-6 sm:p-8 shadow-sm border border-pink-100 bg-gradient-to-br from-white via-pink-50/20 to-purple-50/20">
+          <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2 border-b border-gray-100 pb-3">
+            <InstagramIcon className="w-5 h-5 text-pink-600" /> Social Media & Instagram Presence
+          </h2>
+          <p className="text-xs text-gray-500 mb-6">
+            Configure your official Instagram profile link and handle displayed across the website header, footer, homepage, and contact page.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5 flex items-center gap-1.5">
+                <InstagramIcon className="w-4 h-4 text-pink-600" /> Official Instagram Profile URL *
+              </label>
+              <input
+                type="url"
+                name="instagramUrl"
+                required
+                placeholder="https://www.instagram.com/rathore_electronics_/"
+                value={formData.instagramUrl}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-500 text-sm font-medium text-gray-900"
+              />
+              <p className="text-[11px] text-gray-500 mt-1">
+                Full URL starting with https:// (opens in a new tab when clicked).
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5 flex items-center gap-1.5">
+                <InstagramIcon className="w-4 h-4 text-purple-600" /> Instagram Handle / Username *
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  name="instagramHandle"
+                  required
+                  placeholder="@rathore_electronics_"
+                  value={formData.instagramHandle}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-500 text-sm font-bold text-gray-900"
+                />
+                {formData.instagramUrl && (
+                  <a
+                    href={formData.instagramUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shrink-0 transition-opacity shadow-sm shadow-pink-500/20"
+                    title="Test Instagram Link"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Test Link</span>
+                  </a>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Displayed as label in buttons and business cards (e.g. @rathore_electronics_).
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Section 3: Advance Payment & UPI QR Code */}
         <Card className="p-6 sm:p-8 shadow-sm border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/20 to-white">
           <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2 border-b border-gray-100 pb-3">
             <QrCode className="w-5 h-5 text-indigo-600" /> UPI Advance Payment Configuration

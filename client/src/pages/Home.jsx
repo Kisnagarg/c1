@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, ShieldCheck, Truck, Clock, Sparkles } from 'lucide-react';
+import { ArrowRight, Star, ShieldCheck, Truck, Clock, Sparkles, ExternalLink, MessageSquare } from 'lucide-react';
+import InstagramIcon from '../components/ui/InstagramIcon';
 import API from '../api/axios';
+import { useSettings } from '../context/SettingsContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import { formatPrice } from '../utils/helpers';
@@ -212,6 +214,47 @@ export default function Home() {
                 </Link>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Official Instagram & Social Media Section */}
+      <section className="py-16 bg-gradient-to-br from-purple-950 via-pink-950 to-gray-950 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(236,72,153,0.15),transparent_60%)] pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 p-8 sm:p-12 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl">
+            <div className="space-y-3 text-center lg:text-left max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 text-xs font-bold uppercase tracking-wider">
+                <InstagramIcon className="w-4 h-4 text-pink-400" /> Official Instagram
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                Follow Us on Instagram
+              </h2>
+              <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+                Stay updated with our latest product arrivals, drone flight unboxings, new electronic inventory drops, and store offers at <strong>{settings.instagramHandle || '@rathore_electronics_'}</strong>.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
+              <a
+                href={settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/'}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl font-black text-base text-white bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 shadow-xl shadow-pink-600/30 hover:scale-105 transition-all"
+              >
+                <InstagramIcon className="w-5 h-5" />
+                <span>Follow {settings.instagramHandle || '@rathore_electronics_'}</span>
+                <ExternalLink className="w-4 h-4 ml-1 opacity-80" />
+              </a>
+
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm text-gray-200 bg-white/10 hover:bg-white/20 border border-white/15 transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Contact Store</span>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

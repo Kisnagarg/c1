@@ -30,6 +30,8 @@ exports.updateSettings = async (req, res) => {
       email,
       upiId,
       upiQrImage,
+      instagramUrl,
+      instagramHandle,
       advanceAmount
     } = req.body;
 
@@ -47,6 +49,8 @@ exports.updateSettings = async (req, res) => {
     if (email !== undefined) settings.email = email.trim();
     if (upiId !== undefined) settings.upiId = upiId.trim();
     if (upiQrImage !== undefined) settings.upiQrImage = upiQrImage.trim();
+    if (instagramUrl !== undefined) settings.instagramUrl = instagramUrl.trim();
+    if (instagramHandle !== undefined) settings.instagramHandle = instagramHandle.trim();
     if (advanceAmount !== undefined) settings.advanceAmount = Math.max(0, Number(advanceAmount));
 
     await settings.save();

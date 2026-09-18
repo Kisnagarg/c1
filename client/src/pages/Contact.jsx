@@ -13,6 +13,7 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react';
+import InstagramIcon from '../components/ui/InstagramIcon';
 import { useSettings } from '../context/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -36,6 +37,8 @@ export default function Contact() {
   const ownerName = settings.ownerName || 'Mahendra Rathore';
   const businessName = settings.businessName || 'Rathore Electronics';
   const email = settings.email || 'support@rathoreelectronics.com';
+  const instagramUrl = settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/';
+  const instagramHandle = settings.instagramHandle || '@rathore_electronics_';
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -75,7 +78,7 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         
         {/* Quick Contact Action Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {/* Primary Call */}
           <a
             href={`tel:${primaryPhone}`}
@@ -86,7 +89,7 @@ export default function Contact() {
             </div>
             <div>
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Primary Contact</span>
-              <span className="font-extrabold text-gray-900 text-base">{primaryPhone}</span>
+              <span className="font-extrabold text-gray-900 text-sm sm:text-base">{primaryPhone}</span>
               <span className="text-xs text-primary-600 font-semibold block mt-0.5">Click to Call Now</span>
             </div>
           </a>
@@ -103,8 +106,25 @@ export default function Contact() {
             </div>
             <div>
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">WhatsApp Support</span>
-              <span className="font-extrabold text-gray-900 text-base">Chat on WhatsApp</span>
+              <span className="font-extrabold text-gray-900 text-sm sm:text-base">Chat on WhatsApp</span>
               <span className="text-xs text-emerald-600 font-semibold block mt-0.5">Instant message response</span>
+            </div>
+          </a>
+
+          {/* Instagram Official */}
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-gray-200/80 shadow-sm hover:shadow-md hover:border-pink-300 transition-all group"
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-amber-500 text-white rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+              <InstagramIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Official Instagram</span>
+              <span className="font-extrabold text-gray-900 text-sm sm:text-base">{instagramHandle}</span>
+              <span className="text-xs text-pink-600 font-semibold block mt-0.5">Follow on Instagram</span>
             </div>
           </a>
 
@@ -118,8 +138,8 @@ export default function Contact() {
             </div>
             <div>
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Secondary Contact</span>
-              <span className="font-extrabold text-gray-900 text-base">{secondaryPhone}</span>
-              <span className="text-xs text-indigo-600 font-semibold block mt-0.5">Available during store hours</span>
+              <span className="font-extrabold text-gray-900 text-sm sm:text-base">{secondaryPhone}</span>
+              <span className="text-xs text-indigo-600 font-semibold block mt-0.5">Store Support</span>
             </div>
           </a>
         </div>
@@ -199,6 +219,24 @@ export default function Contact() {
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Official Support Email</span>
                     <a href={`mailto:${email}`} className="font-semibold text-gray-900 hover:text-primary-600 transition-colors block mt-0.5">
                       {email}
+                    </a>
+                  </div>
+                </div>
+
+                {/* Instagram Channel */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <InstagramIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Official Instagram Profile</span>
+                    <a 
+                      href={instagramUrl} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="font-bold text-pink-600 hover:text-pink-700 transition-colors inline-flex items-center gap-1 mt-0.5"
+                    >
+                      {instagramHandle} <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
                 </div>

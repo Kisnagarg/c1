@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 import { ShoppingBag, Search, Menu, X, User, LogOut, LayoutDashboard, ChevronDown, Phone } from 'lucide-react';
+import InstagramIcon from '../ui/InstagramIcon';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -23,7 +24,7 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setProfileOpen(false);
-  }, [location]);
+  }, [location.pathname]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -45,21 +46,53 @@ export default function Navbar() {
     { to: '/contact', label: 'Contact Us' },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
   const storeName = settings.businessName || 'Rathore Electronics';
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-lg border-b border-white/20' : 'bg-white/95 backdrop-blur-sm'}`}>
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-100' : 'bg-white border-b border-gray-100'
+    }`}>
+      {/* Top Banner with Business Info */}
+      <div className="bg-primary-950 text-gray-200 text-xs py-1.5 px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <a href={`tel:${settings.primaryPhone || '8435930113'}`} className="hover:text-primary-300 transition-colors flex items-center gap-1">
+              <Phone className="w-3 h-3 text-primary-400" />
+              <span>Call: <strong className="text-white">{settings.primaryPhone || '8435930113'}</strong></span>
+            </a>
+            <span className="hidden sm:inline text-gray-600">|</span>
+            <span className="hidden sm:inline text-gray-400">Owner: <strong className="text-gray-200">{settings.ownerName || 'Mahendra Rathore'}</strong></span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden md:inline text-emerald-400 font-medium">⚡ Flat ₹200 Advance Booking Available</span>
+            <a 
+              href={settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/'}
+              target="_blank" 
+              rel="noreferrer"
+              className="text-pink-400 hover:text-pink-300 font-semibold transition-colors flex items-center gap-1"
+            >
+              <InstagramIcon className="w-3.5 h-3.5" />
+              <span>{settings.instagramHandle || '@rathore_electronics_'}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow shrink-0">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
               <ShoppingBag className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-black bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
-              {storeName}
-            </span>
+            <div>
+              <span className="text-lg font-black text-gray-900 tracking-tight block leading-tight">{storeName}</span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-primary-600 block">Vidisha, MP</span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
@@ -77,6 +110,18 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Instagram Link in Navbar */}
+            <a
+              href={settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/'}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-pink-600 hover:text-white bg-pink-50 hover:bg-gradient-to-r hover:from-purple-600 hover:via-pink-600 hover:to-amber-500 transition-all shadow-sm ml-1"
+              title="Follow us on Instagram @rathore_electronics_"
+            >
+              <InstagramIcon className="w-4 h-4" />
+              <span>Instagram</span>
+            </a>
           </div>
 
           {/* Search + Auth */}
@@ -88,7 +133,7 @@ export default function Navbar() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-52 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all focus:w-64"
+                className="w-48 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all focus:w-60"
               />
             </form>
 
@@ -183,6 +228,17 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Mobile Instagram Button */}
+            <a
+              href={settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/'}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-bold text-pink-700 bg-pink-50 hover:bg-pink-100 my-1 mx-1 transition-colors"
+            >
+              <InstagramIcon className="w-4 h-4 text-pink-600" />
+              <span>Follow {settings.instagramHandle || '@rathore_electronics_'}</span>
+            </a>
             {user ? (
               <>
                 <Link to="/dashboard" className="block px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 rounded-lg">

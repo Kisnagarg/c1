@@ -51,6 +51,16 @@ const settingsSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  instagramUrl: {
+    type: String,
+    trim: true,
+    default: 'https://www.instagram.com/rathore_electronics_/'
+  },
+  instagramHandle: {
+    type: String,
+    trim: true,
+    default: '@rathore_electronics_'
+  },
   advanceAmount: {
     type: Number,
     required: true,
@@ -79,6 +89,8 @@ settingsSchema.statics.getSettings = async function() {
       email: 'support@rathoreelectronics.com',
       upiId: '8435930113@upi',
       upiQrImage: '',
+      instagramUrl: 'https://www.instagram.com/rathore_electronics_/',
+      instagramHandle: '@rathore_electronics_',
       advanceAmount: 200,
       currency: 'INR'
     });

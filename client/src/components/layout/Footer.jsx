@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Mail, MapPin, Phone, MessageSquare, User, ShieldCheck } from 'lucide-react';
+import InstagramIcon from '../ui/InstagramIcon';
 import { useSettings } from '../../context/SettingsContext';
 
 export default function Footer() {
@@ -12,6 +13,8 @@ export default function Footer() {
   const secondaryPhone = settings.secondaryPhone || '7067586087';
   const whatsappNumber = settings.whatsappNumber || '8435930113';
   const email = settings.email || 'support@rathoreelectronics.com';
+  const instagramUrl = settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/';
+  const instagramHandle = settings.instagramHandle || '@rathore_electronics_';
 
   const footerCategories = [
     { name: 'Drones', slug: 'drones' },
@@ -40,11 +43,25 @@ export default function Footer() {
             <p className="text-xs text-gray-400 leading-relaxed">
               Your premier multi-category store for verified electronics, drones, wiring solutions, smart lighting, kitchen appliances, and RC toys.
             </p>
-            <div className="pt-2">
+            
+            <div className="pt-1">
               <span className="text-[11px] uppercase tracking-wider text-gray-500 font-bold block">Proprietor / Owner</span>
               <span className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
                 <User className="w-3.5 h-3.5 text-primary-400" /> {ownerName}
               </span>
+            </div>
+
+            {/* Official Instagram Badge */}
+            <div className="pt-2">
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 shadow-md shadow-pink-900/20 transition-all hover:scale-105"
+              >
+                <InstagramIcon className="w-4 h-4" />
+                <span>Follow us on Instagram</span>
+              </a>
             </div>
           </div>
 
@@ -114,6 +131,18 @@ export default function Footer() {
                   className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
                 >
                   WhatsApp Support
+                </a>
+              </li>
+
+              <li className="flex items-center gap-2.5">
+                <InstagramIcon className="w-4 h-4 text-pink-400 shrink-0" />
+                <a 
+                  href={instagramUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-pink-400 hover:text-pink-300 font-bold transition-colors"
+                >
+                  Instagram {instagramHandle}
                 </a>
               </li>
 

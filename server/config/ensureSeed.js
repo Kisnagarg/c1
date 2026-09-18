@@ -198,12 +198,14 @@ const ensureSeedData = async () => {
         email: 'support@rathoreelectronics.com',
         upiId: '8435930113@upi',
         upiQrImage: '',
+        instagramUrl: 'https://www.instagram.com/rathore_electronics_/',
+        instagramHandle: '@rathore_electronics_',
         advanceAmount: 200,
         currency: 'INR'
       });
       console.log('✅ Created default Store Settings for Rathore Electronics');
     } else {
-      // If default address or phones need updating
+      // If default address, phones, or social links need updating
       let updated = false;
       if (!settings.primaryPhone || settings.primaryPhone === '+91 98765 43210') {
         settings.primaryPhone = '8435930113';
@@ -223,6 +225,14 @@ const ensureSeedData = async () => {
       }
       if (!settings.upiId) {
         settings.upiId = '8435930113@upi';
+        updated = true;
+      }
+      if (!settings.instagramUrl) {
+        settings.instagramUrl = 'https://www.instagram.com/rathore_electronics_/';
+        updated = true;
+      }
+      if (!settings.instagramHandle) {
+        settings.instagramHandle = '@rathore_electronics_';
         updated = true;
       }
       if (settings.advanceAmount === undefined || settings.advanceAmount === null) {
