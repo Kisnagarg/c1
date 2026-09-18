@@ -10,6 +10,8 @@ router.use(auth, admin);
 router.get('/stats', adminController.getStats);
 router.get('/bookings', adminController.getAllBookings);
 router.put('/bookings/:id/status', adminController.updateBookingStatus);
+router.post('/bookings/:id/verify-payment', adminController.verifyPayment);
+router.post('/bookings/:id/reject-payment', adminController.rejectPayment);
 router.get('/users', adminController.getUsers);
 router.put('/users/:id', adminController.toggleUserStatus);
 router.get('/users/:id/bookings', adminController.getUserBookings);

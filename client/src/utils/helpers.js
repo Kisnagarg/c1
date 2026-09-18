@@ -7,9 +7,9 @@ export function formatPrice(price) {
   }).format(price);
 }
 
-
 export function formatDate(date) {
-  return new Date(date).toLocaleDateString('en-US', {
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString('en-IN', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
@@ -17,7 +17,8 @@ export function formatDate(date) {
 }
 
 export function formatDateTime(date) {
-  return new Date(date).toLocaleDateString('en-US', {
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString('en-IN', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -26,15 +27,57 @@ export function formatDateTime(date) {
   });
 }
 
+export function getOrderStatusLabel(status) {
+  const map = {
+    awaiting_advance: 'Awaiting Advance Payment',
+    awaiting_verification: 'Awaiting Payment Verification',
+    confirmed: 'Confirmed',
+    processing: 'Processing',
+    shipped: 'Ready / Shipped',
+    ready: 'Ready / Shipped',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    pending: 'Awaiting Advance Payment'
+  };
+  return map[status] || status || 'Pending';
+}
+
+export function getPaymentStatusLabel(status) {
+  const map = {
+    awaiting_payment: 'Awaiting Payment',
+    pending_verification: 'Pending Verification',
+    verified: 'Verified',
+    rejected: 'Rejected'
+  };
+  return map[status] || status || 'Awaiting Payment';
+}
+
 export function getStatusColor(status) {
   const colors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-blue-100 text-blue-800',
-    processing: 'bg-orange-100 text-orange-800',
-    completed: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800'
+    awaiting_advance: 'bg-amber-100 text-amber-800 border-amber-200',
+    awaiting_verification: 'bg-purple-100 text-purple-800 border-purple-200',
+    confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
+    processing: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    shipped: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    ready: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    completed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    cancelled: 'bg-rose-100 text-rose-800 border-rose-200',
+    // Fallbacks
+    pending: 'bg-amber-100 text-amber-800 border-amber-200',
+    verified: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    rejected: 'bg-rose-100 text-rose-800 border-rose-200'
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+}
+
+export function getPaymentStatusColor(status) {
+  const colors = {
+    awaiting_payment: 'bg-amber-100 text-amber-800 border-amber-200',
+    pending_verification: 'bg-purple-100 text-purple-800 border-purple-200',
+    verified: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    rejected: 'bg-rose-100 text-rose-800 border-rose-200'
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
 }
 
 export function truncate(str, len = 80) {

@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Category = require('../models/Category');
 const Product = require('../models/Product');
+const Settings = require('../models/Settings');
 
 let seedChecked = false;
 
@@ -184,7 +185,57 @@ const ensureSeedData = async () => {
   seedChecked = true;
 
   try {
-    // 1. Ensure Admin User exists
+    // 1. Ensure Store Settings exist with exact client information
+    let settings = await Settings.findOne();
+    if (!settings) {
+      await Settings.create({
+        businessName: 'Rathore Electronics',
+        ownerName: 'Mahendra Rathore',
+        address: 'Main Bus Stand, Atari Khejda, Vidisha, Madhya Pradesh',
+        primaryPhone: '8435930113',
+        secondaryPhone: '7067586087',
+        whatsappNumber: '8435930113',
+        email: 'support@rathoreelectronics.com',
+        upiId: '8435930113@upi',
+        upiQrImage: '',
+        advanceAmount: 200,
+        currency: 'INR'
+      });
+      console.log('✅ Created default Store Settings for Rathore Electronics');
+    } else {
+      // If default address or phones need updating
+      let updated = false;
+      if (!settings.primaryPhone || settings.primaryPhone === '+91 98765 43210') {
+        settings.primaryPhone = '8435930113';
+        updated = true;
+      }
+      if (!settings.secondaryPhone) {
+        settings.secondaryPhone = '7067586087';
+        updated = true;
+      }
+      if (!settings.ownerName) {
+        settings.ownerName = 'Mahendra Rathore';
+        updated = true;
+      }
+      if (!settings.address || settings.address.includes('Main Market')) {
+        settings.address = 'Main Bus Stand, Atari Khejda, Vidisha, Madhya Pradesh';
+        updated = true;
+      }
+      if (!settings.upiId) {
+        settings.upiId = '8435930113@upi';
+        updated = true;
+      }
+      if (settings.advanceAmount === undefined || settings.advanceAmount === null) {
+        settings.advanceAmount = 200;
+        updated = true;
+      }
+      if (updated) {
+        await settings.save();
+        console.log('✅ Synchronized Store Settings with client business details');
+      }
+    }
+
+    // 2. Ensure Admin User exists
     let admin = await User.findOne({ email: 'admin@rathoreelectronics.com' });
     if (!admin) {
       // Check legacy admin
@@ -193,6 +244,7 @@ const ensureSeedData = async () => {
         legacyAdmin.email = 'admin@rathoreelectronics.com';
         legacyAdmin.name = 'Rathore Electronics Admin';
         legacyAdmin.role = 'admin';
+        legacyAdmin.phone = '8435930113';
         legacyAdmin.password = 'admin123';
         await legacyAdmin.save();
         console.log('✅ Migrated admin account to admin@rathoreelectronics.com');
@@ -201,7 +253,7 @@ const ensureSeedData = async () => {
           name: 'Rathore Electronics Admin',
           email: 'admin@rathoreelectronics.com',
           password: 'admin123',
-          phone: '+91 9876543210',
+          phone: '8435930113',
           role: 'admin',
           isActive: true
         });
@@ -209,7 +261,7 @@ const ensureSeedData = async () => {
       }
     }
 
-    // 2. Ensure Categories exist
+    // 3. Ensure Categories exist
     const categoryCount = await Category.countDocuments();
     if (categoryCount === 0) {
       console.log('📂 Seeding initial 8 categories...');
@@ -219,7 +271,7 @@ const ensureSeedData = async () => {
         createdMap[cat.name] = created;
       }
 
-      // 3. Ensure Sample Products exist
+      // 4. Ensure Sample Products exist
       const productCount = await Product.countDocuments();
       if (productCount === 0) {
         console.log('📦 Seeding sample products...');

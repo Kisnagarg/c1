@@ -2,8 +2,23 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
-  Package, Calendar, Clock, ChevronRight, User, Mail, Phone, 
-  LogOut, Shield, KeyRound, Eye, EyeOff, CheckCircle2, UserCheck, LayoutDashboard 
+  Package, 
+  Calendar, 
+  Clock, 
+  ChevronRight, 
+  User, 
+  Mail, 
+  Phone, 
+  LogOut, 
+  Shield, 
+  KeyRound, 
+  Eye, 
+  EyeOff, 
+  CheckCircle2, 
+  UserCheck, 
+  LayoutDashboard,
+  QrCode,
+  AlertCircle
 } from 'lucide-react';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +27,14 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Spinner from '../components/ui/Spinner';
-import { formatPrice, formatDate, getStatusColor } from '../utils/helpers';
+import { 
+  formatPrice, 
+  formatDate, 
+  getOrderStatusLabel, 
+  getPaymentStatusLabel, 
+  getStatusColor, 
+  getPaymentStatusColor 
+} from '../utils/helpers';
 
 export default function Dashboard() {
   const { user, logout, updateUser } = useAuth();
@@ -106,7 +128,7 @@ export default function Dashboard() {
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">My Dashboard</h1>
-            <p className="text-gray-600 mt-1">Manage your profile, security settings, and order bookings.</p>
+            <p className="text-gray-600 mt-1">Track your order bookings, UPI advance verification, and account profile.</p>
           </div>
           {user.role === 'admin' && (
             <Link 
@@ -118,7 +140,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Mobile Tab Pills Bar (Fast thumb switching on phones) */}
+        {/* Mobile Tab Pills Bar */}
         <div className="flex lg:hidden overflow-x-auto gap-2 pb-2 mb-6 scrollbar-none">
           <button
             onClick={() => setActiveTab('bookings')}
@@ -158,7 +180,7 @@ export default function Dashboard() {
           
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24 border border-gray-100 shadow-sm bg-white">
+            <Card className="p-6 sticky top-24 border border-gray-200 shadow-sm bg-white rounded-3xl">
               <div className="text-center mb-6 border-b border-gray-100 pb-6">
                 {user.avatar ? (
                   <img
@@ -190,8 +212,8 @@ export default function Dashboard() {
                   }`}
                 >
                   <Package className="w-4 h-4" />
-                  <span>My Bookings</span>
-                  <span className="ml-auto text-xs bg-white border border-gray-200 px-2 py-0.5 rounded-full text-gray-600">
+                  <span>My Orders</span>
+                  <span className="ml-auto text-xs bg-white border border-gray-200 px-2 py-0.5 rounded-full text-gray-600 font-bold">
                     {bookings.length}
                   </span>
                 </button>
@@ -247,80 +269,118 @@ export default function Dashboard() {
           <div className="lg:col-span-3">
             {/* 1. Bookings Tab */}
             {activeTab === 'bookings' && (
-              <Card className="overflow-hidden border border-gray-100 shadow-sm bg-white">
+              <Card className="overflow-hidden border border-gray-200 shadow-sm bg-white rounded-3xl">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                   <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-primary-600" /> My Order Bookings
+                    <Package className="w-5 h-5 text-primary-600" /> My Orders & Advance Payments
                   </h2>
-                  <Badge variant="primary">{bookings.length} Total</Badge>
+                  <Badge variant="primary">{bookings.length} Orders</Badge>
                 </div>
                 
                 {bookings.length > 0 ? (
                   <div className="divide-y divide-gray-100">
-                    {bookings.map((booking) => (
-                      <Link 
-                        key={booking._id} 
-                        to={`/dashboard/bookings/${booking._id}`}
-                        className="block p-6 hover:bg-gray-50/80 transition-colors group"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="font-mono text-sm font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-lg">
-                                {booking.bookingId}
-                              </span>
-                              <Badge className={getStatusColor(booking.status)}>
-                                {booking.status.toUpperCase()}
-                              </Badge>
-                            </div>
-                            
-                            <div className="flex items-center gap-6 text-sm text-gray-500">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="w-4 h-4" />
-                                {formatDate(booking.createdAt)}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4" />
-                                {new Date(booking.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              </div>
-                            </div>
-                            
-                            <div className="mt-4 flex -space-x-2 overflow-hidden">
-                              {booking.items.map((item, i) => (
-                                <img 
-                                  key={i}
-                                  className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover bg-gray-100"
-                                  src={item.image || 'https://images.unsplash.com/photo-1507582020434-97210e740b79?w=800'}
-                                  alt={item.name}
-                                  title={item.name}
-                                />
-                              ))}
-                              {booking.items.length === 1 && (
-                                <span className="pl-4 text-sm font-medium text-gray-900 truncate self-center">
-                                  {booking.items[0].name} {booking.items[0].quantity > 1 ? `(x${booking.items[0].quantity})` : ''}
+                    {bookings.map((booking) => {
+                      const needsPayment = booking.orderStatus === 'awaiting_advance' || booking.paymentStatus === 'awaiting_payment' || booking.paymentStatus === 'rejected';
+                      const isPending = booking.paymentStatus === 'pending_verification';
+                      const advance = booking.advanceAmount || 200;
+                      const remaining = booking.remainingAmount !== undefined ? booking.remainingAmount : Math.max(0, booking.totalAmount - advance);
+
+                      return (
+                        <div 
+                          key={booking._id} 
+                          className="p-6 hover:bg-gray-50/80 transition-colors"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <span className="font-mono text-sm font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-lg border border-primary-100">
+                                  {booking.bookingId}
                                 </span>
-                              )}
+                                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${getStatusColor(booking.orderStatus || booking.status)}`}>
+                                  {getOrderStatusLabel(booking.orderStatus || booking.status)}
+                                </span>
+                                <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                                  Payment: {getPaymentStatusLabel(booking.paymentStatus)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-3.5 h-3.5" />
+                                  {formatDate(booking.createdAt)}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  {new Date(booking.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </div>
+                              </div>
+
+                              {/* Products in this order */}
+                              <div className="flex items-center gap-2">
+                                <div className="flex -space-x-2 overflow-hidden">
+                                  {booking.items?.slice(0, 3).map((item, i) => (
+                                    <img 
+                                      key={i}
+                                      className="inline-block h-10 w-10 rounded-xl ring-2 ring-white object-cover bg-gray-100 border"
+                                      src={item.image || 'https://images.unsplash.com/photo-1507582020434-97210e740b79?w=800'}
+                                      alt={item.name}
+                                      title={item.name}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs font-semibold text-gray-700">
+                                  {booking.items?.length || 0} product(s) • Total: {formatPrice(booking.totalAmount)}
+                                </span>
+                              </div>
+
+                              {/* Remaining Balance Indicator */}
+                              <div className="mt-2 text-xs text-gray-500">
+                                Advance: <strong className="text-emerald-700 font-bold">₹{advance}</strong> | Remaining to pay on delivery: <strong className="text-gray-900 font-bold">{formatPrice(remaining)}</strong>
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center gap-2">
-                            <div className="text-lg font-black text-gray-900">
-                              {formatPrice(booking.totalAmount)}
-                            </div>
-                            <div className="flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
-                              View Order <ChevronRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                            
+                            {/* Action Buttons */}
+                            <div className="flex flex-col sm:items-end gap-2 shrink-0">
+                              <div className="text-lg font-black text-gray-900">
+                                {formatPrice(booking.totalAmount)}
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {needsPayment ? (
+                                  <Link 
+                                    to={`/orders/${booking._id}/payment`}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold shadow-sm"
+                                  >
+                                    <QrCode className="w-3.5 h-3.5" /> Pay ₹{advance} Advance
+                                  </Link>
+                                ) : isPending ? (
+                                  <Link 
+                                    to={`/orders/${booking._id}/payment`}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold"
+                                  >
+                                    <Clock className="w-3.5 h-3.5 text-amber-700" /> Pending Verification
+                                  </Link>
+                                ) : null}
+
+                                <Link 
+                                  to={`/dashboard/bookings/${booking._id}`}
+                                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors"
+                                >
+                                  View Details <ChevronRight className="w-3.5 h-3.5" />
+                                </Link>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="p-12 text-center">
                     <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <Package className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">No bookings yet</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">No orders placed yet</h3>
                     <p className="text-gray-500 mb-6 max-w-sm mx-auto">Explore Rathore Electronics catalog to book drones, appliances, lighting, and accessories.</p>
                     <Link 
                       to="/products" 
@@ -335,12 +395,12 @@ export default function Dashboard() {
 
             {/* 2. Edit Profile Tab */}
             {activeTab === 'profile' && (
-              <Card className="p-6 border border-gray-100 shadow-sm bg-white">
+              <Card className="p-6 border border-gray-200 shadow-sm bg-white rounded-3xl">
                 <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
                   <User className="w-5 h-5 text-primary-600" /> Account Profile Details
                 </h2>
                 <p className="text-sm text-gray-500 mb-6">
-                  Update your display name and contact phone number.
+                  Update your display name and contact phone number for dispatch.
                 </p>
 
                 <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-lg">
@@ -365,10 +425,10 @@ export default function Dashboard() {
                     type="tel"
                     required
                     leftIcon={Phone}
-                    placeholder="+91 98765 43210"
+                    placeholder="e.g. 8435930113"
                     value={profileForm.phone}
                     onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                    helperText="Mandatory for delivery updates and order notifications"
+                    helperText="Mandatory for delivery updates and ₹200 advance payment tracking"
                   />
 
                   <Button type="submit" className="py-2.5 px-6 font-semibold" isLoading={profileLoading}>
@@ -380,12 +440,12 @@ export default function Dashboard() {
 
             {/* 3. Security & Change Password Tab */}
             {activeTab === 'security' && (
-              <Card className="p-6 border border-gray-100 shadow-sm bg-white">
+              <Card className="p-6 border border-gray-200 shadow-sm bg-white rounded-3xl">
                 <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
                   <KeyRound className="w-5 h-5 text-primary-600" /> Update Password
                 </h2>
                 <p className="text-sm text-gray-500 mb-6">
-                  Ensure your account is using a long, random password to stay secure.
+                  Ensure your account is using a secure password.
                 </p>
 
                 <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-lg">
@@ -449,4 +509,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

@@ -7,5 +7,6 @@ const auth = require('../middleware/auth');
 router.post('/', auth, bookingController.createBooking);
 router.get('/my', auth, bookingController.getMyBookings);
 router.get('/:id', auth, bookingController.getBooking);
+router.post('/:id/payment', auth, bookingController.submitPayment);
 
 module.exports = router;

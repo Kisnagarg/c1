@@ -19,8 +19,11 @@ const upload = multer({
   }
 });
 
-// Admin protected upload routes
+// Admin protected upload routes for products, categories, QR code
 router.post('/single', auth, admin, upload.single('image'), uploadController.uploadSingleImage);
 router.post('/multiple', auth, admin, upload.array('images', 8), uploadController.uploadMultipleImages);
+
+// Customer upload route for payment screenshots
+router.post('/payment-proof', auth, upload.single('image'), uploadController.uploadPaymentProof);
 
 module.exports = router;

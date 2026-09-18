@@ -14,9 +14,12 @@ exports.getStats = async (req, res) => {
       totalCategories,
       totalUsers,
       totalBookings,
-      pendingBookings,
+      pendingVerifications,
+      awaitingAdvance,
+      confirmedBookings,
       completedBookings,
       revenueResult,
+      advanceCollectedResult,
       stockResult
     ] = await Promise.all([
       Product.countDocuments(),
@@ -26,11 +29,17 @@ exports.getStats = async (req, res) => {
       Category.countDocuments(),
       User.countDocuments({ role: 'user' }),
       Booking.countDocuments(),
-      Booking.countDocuments({ status: 'pending' }),
-      Booking.countDocuments({ status: 'completed' }),
+      Booking.countDocuments({ paymentStatus: 'pending_verification' }),
+      Booking.countDocuments({ orderStatus: 'awaiting_advance' }),
+      Booking.countDocuments({ orderStatus: 'confirmed' }),
+      Booking.countDocuments({ orderStatus: 'completed' }),
       Booking.aggregate([
-        { $match: { status: { $ne: 'cancelled' } } },
+        { $match: { orderStatus: { $in: ['confirmed', 'processing', 'shipped', 'completed'] } } },
         { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]),
+      Booking.aggregate([
+        { $match: { paymentStatus: 'verified' } },
+        { $group: { _id: null, total: { $sum: '$advanceAmount' } } }
       ]),
       Product.aggregate([
         { $group: { _id: null, total: { $sum: '$stock' } } }
@@ -46,7 +55,12 @@ exports.getStats = async (req, res) => {
 
     // Booking status distribution
     const statusDist = await Booking.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } }
+      { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+    ]);
+
+    // Payment status distribution
+    const paymentDist = await Booking.aggregate([
+      { $group: { _id: '$paymentStatus', count: { $sum: 1 } } }
     ]);
 
     // Monthly revenue (last 6 months)
@@ -54,7 +68,12 @@ exports.getStats = async (req, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const monthlyRevenue = await Booking.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo }, status: { $ne: 'cancelled' } } },
+      { 
+        $match: { 
+          createdAt: { $gte: sixMonthsAgo }, 
+          orderStatus: { $in: ['confirmed', 'processing', 'shipped', 'completed'] } 
+        } 
+      },
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
@@ -75,12 +94,16 @@ exports.getStats = async (req, res) => {
         totalCategories,
         totalUsers,
         totalBookings,
-        pendingBookings,
+        pendingVerifications,
+        awaitingAdvance,
+        confirmedBookings,
         completedBookings,
         totalRevenue: revenueResult[0]?.total || 0,
+        totalAdvanceCollected: advanceCollectedResult[0]?.total || 0,
         totalStock: stockResult[0]?.total || 0,
         recentBookings,
         statusDistribution: statusDist,
+        paymentDistribution: paymentDist,
         monthlyRevenue
       }
     });
@@ -90,32 +113,80 @@ exports.getStats = async (req, res) => {
   }
 };
 
-// Get all bookings (admin)
+// Get all bookings (admin) with robust search and filters
 exports.getAllBookings = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { 
+      status, 
+      orderStatus, 
+      paymentStatus, 
+      search, 
+      dateFrom, 
+      dateTo, 
+      page = 1, 
+      limit = 20 
+    } = req.query;
+
     const query = {};
-    if (status) query.status = status;
+
+    // Order status filter
+    if (orderStatus) {
+      query.orderStatus = orderStatus;
+    } else if (status) {
+      query.$or = [{ orderStatus: status }, { status: status }];
+    }
+
+    // Payment status filter
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
+
+    // Search by booking ID, customer phone, or UPI transaction ID
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { bookingId: searchRegex },
+        { customerPhone: searchRegex },
+        { customerName: searchRegex },
+        { customerEmail: searchRegex },
+        { upiTransactionId: searchRegex }
+      ];
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    const [bookings, total] = await Promise.all([
+    const [bookings, total, pendingVerificationsCount] = await Promise.all([
       Booking.find(query)
         .populate('user', 'name email phone')
+        .populate('paymentVerifiedBy', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
         .lean(),
-      Booking.countDocuments(query)
+      Booking.countDocuments(query),
+      Booking.countDocuments({ paymentStatus: 'pending_verification' })
     ]);
 
     res.json({
       success: true,
       bookings,
+      pendingVerificationsCount,
       pagination: {
         current: Number(page),
-        pages: Math.ceil(total / Number(limit)),
-        total
+        pages: Math.ceil(total / Number(limit)) || 1,
+        total,
+        limit: Number(limit)
       }
     });
   } catch (error) {
@@ -124,53 +195,135 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-// Update booking status
-exports.updateBookingStatus = async (req, res) => {
+// Verify ₹200 UPI Payment (Admin)
+exports.verifyPayment = async (req, res) => {
   try {
-    const { status } = req.body;
-    const validStatuses = ['pending', 'confirmed', 'processing', 'completed', 'cancelled'];
-    
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status.' });
-    }
-
+    const { adminNote } = req.body;
     const booking = await Booking.findById(req.params.id);
+
     if (!booking) {
-      return res.status(404).json({ success: false, message: 'Booking not found.' });
+      return res.status(404).json({ success: false, message: 'Order not found.' });
     }
 
-    const oldStatus = booking.status;
-
-    // If cancelling, restore stock
-    if (status === 'cancelled' && oldStatus !== 'cancelled') {
-      for (const item of booking.items) {
-        await Product.findByIdAndUpdate(item.product, {
-          $inc: { stock: item.quantity },
-          isAvailable: true
-        });
-      }
+    booking.paymentStatus = 'verified';
+    booking.orderStatus = 'confirmed';
+    booking.paymentVerifiedAt = new Date();
+    booking.paymentVerifiedBy = req.user._id;
+    booking.rejectionReason = '';
+    if (adminNote) {
+      booking.adminNote = adminNote.trim();
     }
 
-    // If un-cancelling (re-activating), reduce stock again
-    if (oldStatus === 'cancelled' && status !== 'cancelled') {
-      for (const item of booking.items) {
-        const product = await Product.findById(item.product);
-        if (product && product.stock >= item.quantity) {
-          product.stock -= item.quantity;
-          if (product.stock === 0) product.isAvailable = false;
-          await product.save();
-        }
-      }
-    }
-
-    booking.status = status;
     await booking.save();
+    await booking.populate('user', 'name email phone');
+    await booking.populate('paymentVerifiedBy', 'name email');
 
+    res.json({
+      success: true,
+      message: `Advance payment verified. Order #${booking.bookingId} is now CONFIRMED.`,
+      booking
+    });
+  } catch (error) {
+    console.error('VerifyPayment error:', error);
+    res.status(500).json({ success: false, message: 'Server error verifying payment.' });
+  }
+};
+
+// Reject UPI Payment (Admin)
+exports.rejectPayment = async (req, res) => {
+  try {
+    const { reason, adminNote } = req.body;
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    booking.paymentStatus = 'rejected';
+    booking.orderStatus = 'awaiting_advance';
+    booking.rejectionReason = reason ? reason.trim() : 'Invalid or unverified UPI transaction details.';
+    if (adminNote) {
+      booking.adminNote = adminNote.trim();
+    }
+
+    await booking.save();
     await booking.populate('user', 'name email phone');
 
     res.json({
       success: true,
-      message: `Booking status updated to ${status}.`,
+      message: `Payment rejected for Order #${booking.bookingId}. Customer can re-submit valid UPI details.`,
+      booking
+    });
+  } catch (error) {
+    console.error('RejectPayment error:', error);
+    res.status(500).json({ success: false, message: 'Server error rejecting payment.' });
+  }
+};
+
+// Update booking / order status (Admin)
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const { status, orderStatus, adminNote } = req.body;
+    const targetStatus = orderStatus || status;
+    const validStatuses = [
+      'awaiting_advance',
+      'awaiting_verification',
+      'confirmed',
+      'processing',
+      'shipped',
+      'ready',
+      'completed',
+      'cancelled'
+    ];
+    
+    if (!validStatuses.includes(targetStatus)) {
+      return res.status(400).json({ success: false, message: 'Invalid order status.' });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    const oldStatus = booking.orderStatus;
+
+    // If cancelling, restore stock
+    if (targetStatus === 'cancelled' && oldStatus !== 'cancelled') {
+      for (const item of booking.items) {
+        if (item.product) {
+          await Product.findByIdAndUpdate(item.product, {
+            $inc: { stock: item.quantity },
+            isAvailable: true
+          });
+        }
+      }
+    }
+
+    // If un-cancelling (re-activating), reduce stock again
+    if (oldStatus === 'cancelled' && targetStatus !== 'cancelled') {
+      for (const item of booking.items) {
+        if (item.product) {
+          const product = await Product.findById(item.product);
+          if (product && product.stock >= item.quantity) {
+            product.stock -= item.quantity;
+            if (product.stock === 0) product.isAvailable = false;
+            await product.save();
+          }
+        }
+      }
+    }
+
+    booking.orderStatus = targetStatus;
+    booking.status = targetStatus;
+    if (adminNote) booking.adminNote = adminNote.trim();
+
+    await booking.save();
+    await booking.populate('user', 'name email phone');
+    await booking.populate('paymentVerifiedBy', 'name email');
+
+    res.json({
+      success: true,
+      message: `Order #${booking.bookingId} status updated to ${targetStatus}.`,
       booking
     });
   } catch (error) {
