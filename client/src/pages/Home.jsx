@@ -10,6 +10,7 @@ import { formatPrice } from '../utils/helpers';
 import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../utils/initialData';
 
 export default function Home() {
+  const { settings } = useSettings();
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [featuredProducts, setFeaturedProducts] = useState(INITIAL_PRODUCTS);
   const [loading, setLoading] = useState(true);
