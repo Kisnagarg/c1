@@ -1,7 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, CheckCircle2, ShieldCheck, ShoppingBag, Phone, AlertCircle, MapPin, IndianRupee } from 'lucide-react';
+import { 
+  ShoppingBag, 
+  MapPin, 
+  Phone, 
+  User, 
+  ShieldCheck, 
+  ArrowLeft, 
+  CheckCircle2, 
+  CreditCard,
+  QrCode,
+  FileText,
+  AlertCircle,
+  IndianRupee
+} from 'lucide-react';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
@@ -9,6 +22,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import { formatPrice } from '../utils/helpers';
+import { validateIndianPhone } from '../utils/validators';
 
 export default function Booking() {
   const { slug } = useParams();
@@ -54,12 +68,21 @@ export default function Booking() {
       .finally(() => setLoading(false));
   }, [slug, initialQty, navigate]);
 
+  const phoneValidation = useMemo(() => {
+    if (!customerPhone) return { isValid: false, message: '' };
+    return validateIndianPhone(customerPhone);
+  }, [customerPhone]);
+
   const handleConfirm = async () => {
-    const finalPhone = (customerPhone || user?.phone || '').trim();
-    if (!finalPhone || finalPhone.length < 10) {
-      toast.error('Customer phone number is mandatory (min. 10 digits) to complete booking');
+    const rawPhone = (customerPhone || user?.phone || '').trim();
+    const phoneCheck = validateIndianPhone(rawPhone);
+
+    if (!phoneCheck.isValid) {
+      toast.error(phoneCheck.message);
       return;
     }
+
+    const finalPhone = phoneCheck.cleaned;
 
     setSubmitting(true);
     try {
@@ -195,10 +218,10 @@ export default function Booking() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
-                    <span>Phone Number * (Mandatory for Delivery)</span>
-                    {customerPhone && customerPhone.length >= 10 && (
+                    <span>10-Digit Mobile Number * (Mandatory for Delivery)</span>
+                    {customerPhone && phoneValidation.isValid && (
                       <span className="text-emerald-600 text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Ready for dispatch
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Valid mobile number
                       </span>
                     )}
                   </label>
@@ -208,19 +231,27 @@ export default function Booking() {
                     <input
                       type="tel"
                       required
-                      placeholder="10-digit mobile number (e.g. 8435930113)"
+                      placeholder="e.g. 8435930113"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 font-medium ${
-                        !customerPhone || customerPhone.trim().length < 10
-                          ? 'border-amber-300 bg-amber-50/50 focus:ring-amber-500 focus:bg-white'
+                        customerPhone && !phoneValidation.isValid
+                          ? 'border-red-300 bg-red-50/40 focus:ring-red-500 focus:bg-white'
+                          : customerPhone && phoneValidation.isValid
+                          ? 'border-emerald-300 bg-emerald-50/30 focus:ring-emerald-500 focus:bg-white'
                           : 'border-gray-300 bg-gray-50 focus:ring-primary-500 focus:bg-white'
                       }`}
                     />
                   </div>
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    Used for order confirmation, advance payment verification, and delivery coordination.
-                  </p>
+                  {customerPhone && !phoneValidation.isValid ? (
+                    <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {phoneValidation.message}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      Used for order confirmation, advance payment verification, and delivery coordination.
+                    </p>
+                  )}
                 </div>
 
                 <div>

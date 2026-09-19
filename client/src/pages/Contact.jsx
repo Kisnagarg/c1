@@ -18,6 +18,8 @@ import { useSettings } from '../context/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
+import { validateIndianPhone, validateEmail } from '../utils/validators';
+
 export default function Contact() {
   const { settings } = useSettings();
   const [form, setForm] = useState({
@@ -42,9 +44,23 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.message) {
+    if (!form.name.trim() || !form.phone.trim() || !form.message.trim()) {
       toast.error('Please fill in your Name, Phone Number, and Message.');
       return;
+    }
+
+    const phoneCheck = validateIndianPhone(form.phone);
+    if (!phoneCheck.isValid) {
+      toast.error(phoneCheck.message);
+      return;
+    }
+
+    if (form.email && form.email.trim()) {
+      const emailCheck = validateEmail(form.email);
+      if (!emailCheck.isValid) {
+        toast.error(emailCheck.message);
+        return;
+      }
     }
 
     setSending(true);

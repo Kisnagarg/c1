@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const { validateIndianPhone, validateEmail } = require('../utils/validators');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -21,14 +22,28 @@ exports.register = async (req, res) => {
 
     const { name, email, password, phone } = req.body;
 
-    if (!phone || !phone.trim() || phone.trim().length < 10) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Customer phone number is mandatory (min. 10 digits).' 
+    // 1. Strict Email Verification
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: emailValidation.message
       });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    // 2. Strict Indian Mobile Number Verification
+    const phoneValidation = validateIndianPhone(phone);
+    if (!phoneValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: phoneValidation.message
+      });
+    }
+
+    const normalizedEmail = emailValidation.email;
+    const normalizedPhone = phoneValidation.cleaned;
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
@@ -37,10 +52,10 @@ exports.register = async (req, res) => {
     }
 
     const user = await User.create({ 
-      name, 
-      email: email.toLowerCase().trim(), 
+      name: name.trim(), 
+      email: normalizedEmail, 
       password, 
-      phone: phone.trim() 
+      phone: normalizedPhone 
     });
     const token = generateToken(user);
 
@@ -211,18 +226,29 @@ exports.googleLogin = async (req, res) => {
         modified = true;
       }
       if (phone && !user.phone) {
-        user.phone = phone.trim();
-        modified = true;
+        const phoneCheck = validateIndianPhone(phone);
+        if (phoneCheck.isValid) {
+          user.phone = phoneCheck.cleaned;
+          modified = true;
+        }
       }
       if (modified) {
         await user.save();
       }
     } else {
+      let cleanedPhone = '';
+      if (phone) {
+        const phoneCheck = validateIndianPhone(phone);
+        if (phoneCheck.isValid) {
+          cleanedPhone = phoneCheck.cleaned;
+        }
+      }
+
       const generatedPassword = `google_auth_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
       user = await User.create({
         name: name || email.split('@')[0],
         email,
-        phone: (phone || '').trim(),
+        phone: cleanedPhone,
         password: generatedPassword,
         googleId: googleId || `google_${Date.now()}`,
         avatar,
@@ -289,14 +315,15 @@ exports.updateProfile = async (req, res) => {
 
     const { name, phone } = req.body;
 
-    if (!phone || !phone.trim() || phone.trim().length < 10) {
+    const phoneValidation = validateIndianPhone(phone);
+    if (!phoneValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: 'Customer phone number is mandatory (min. 10 digits).'
+        message: phoneValidation.message
       });
     }
 
-    const updateData = { phone: phone.trim() };
+    const updateData = { phone: phoneValidation.cleaned };
     if (name && name.trim()) {
       updateData.name = name.trim();
     }

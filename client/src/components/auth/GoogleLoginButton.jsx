@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Phone, Sparkles, X, ShieldCheck, User } from 'lucide-react';
+import { Mail, Phone, Sparkles, X, ShieldCheck, User, CheckCircle2, AlertCircle } from 'lucide-react';
 import API from '../../api/axios';
+import { validateIndianPhone, validateEmail } from '../../utils/validators';
 
 export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
   const { googleLogin, updateUser } = useAuth();
@@ -54,14 +55,15 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
 
   const handleSaveMissingPhone = async (e) => {
     e.preventDefault();
-    if (!missingPhone || missingPhone.trim().length < 10) {
-      toast.error('Please enter a valid phone number (at least 10 digits)');
+    const phoneCheck = validateIndianPhone(missingPhone);
+    if (!phoneCheck.isValid) {
+      toast.error(phoneCheck.message);
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await API.put('/auth/profile', { phone: missingPhone.trim() });
+      const res = await API.put('/auth/profile', { phone: phoneCheck.cleaned });
       updateUser(res.data.user);
       toast.success('Phone number saved successfully!');
       setShowPhonePromptModal(false);
@@ -131,26 +133,28 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
 
   const handleQuickGmailSubmit = async (e) => {
     e.preventDefault();
-    if (!quickEmail || !quickEmail.includes('@')) {
-      toast.error('Please enter a valid Gmail address');
+    const emailCheck = validateEmail(quickEmail);
+    if (!emailCheck.isValid) {
+      toast.error(emailCheck.message);
       return;
     }
 
-    if (!quickPhone || quickPhone.trim().length < 10) {
-      toast.error('Customer phone number is mandatory (at least 10 digits)');
+    const phoneCheck = validateIndianPhone(quickPhone);
+    if (!phoneCheck.isValid) {
+      toast.error(phoneCheck.message);
       return;
     }
 
     setIsLoading(true);
     try {
-      const emailLower = quickEmail.trim().toLowerCase();
+      const emailLower = emailCheck.email;
       const derivedName = quickName.trim() || emailLower.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       const randomAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(derivedName)}&backgroundColor=0284c7,6366f1,ec4899`;
 
       const data = await googleLogin({
         email: emailLower,
         name: derivedName,
-        phone: quickPhone.trim(),
+        phone: phoneCheck.cleaned,
         picture: randomAvatar,
         googleId: `google_demo_${Date.now()}`
       });

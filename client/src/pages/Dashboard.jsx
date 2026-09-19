@@ -1,27 +1,35 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
-  Package, 
-  Calendar, 
+  ShoppingBag, 
   Clock, 
-  ChevronRight, 
-  User, 
-  Mail, 
-  Phone, 
-  LogOut, 
-  Shield, 
-  KeyRound, 
-  Eye, 
-  EyeOff, 
   CheckCircle2, 
-  UserCheck, 
+  XCircle, 
+  AlertCircle, 
+  Eye, 
+  Phone, 
+  MapPin, 
+  IndianRupee, 
+  ArrowRight,
+  ShieldCheck,
+  User,
+  KeyRound,
+  EyeOff,
+  Package,
+  Calendar,
+  Layers,
+  Mail,
+  LogOut,
+  Shield,
+  UserCheck,
   LayoutDashboard,
   QrCode,
-  AlertCircle
+  ChevronRight
 } from 'lucide-react';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -35,10 +43,15 @@ import {
   getStatusColor, 
   getPaymentStatusColor 
 } from '../utils/helpers';
+import { validateIndianPhone } from '../utils/validators';
 
 export default function Dashboard() {
   const { user, logout, updateUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' | 'profile' | 'security'
+  const { settings } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'bookings';
+  const setActiveTab = (tab) => setSearchParams({ tab });
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,14 +79,21 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  const phoneValidation = useMemo(() => {
+    if (!profileForm.phone) return { isValid: false, message: '' };
+    return validateIndianPhone(profileForm.phone);
+  }, [profileForm.phone]);
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     if (!profileForm.name || !profileForm.name.trim()) {
       toast.error('Name is required');
       return;
     }
-    if (!profileForm.phone || profileForm.phone.trim().length < 10) {
-      toast.error('Customer phone number is mandatory (at least 10 digits)');
+    
+    const phoneCheck = validateIndianPhone(profileForm.phone);
+    if (!phoneCheck.isValid) {
+      toast.error(phoneCheck.message);
       return;
     }
 
@@ -81,7 +101,7 @@ export default function Dashboard() {
     try {
       const res = await API.put('/auth/profile', {
         name: profileForm.name.trim(),
-        phone: profileForm.phone.trim()
+        phone: phoneCheck.cleaned
       });
       updateUser(res.data.user);
       toast.success(res.data.message || 'Profile updated successfully!');
@@ -421,17 +441,26 @@ export default function Dashboard() {
                   />
 
                   <Input
-                    label="Phone Number * (Mandatory)"
+                    label="10-Digit Phone Number * (Mandatory)"
                     type="tel"
                     required
                     leftIcon={Phone}
                     placeholder="e.g. 8435930113"
                     value={profileForm.phone}
                     onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                    helperText="Mandatory for delivery updates and ₹200 advance payment tracking"
+                    error={profileForm.phone && !phoneValidation.isValid ? phoneValidation.message : undefined}
+                    helperText={
+                      profileForm.phone && phoneValidation.isValid ? (
+                        <span className="text-emerald-600 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Valid 10-digit mobile number
+                        </span>
+                      ) : (
+                        'Mandatory for delivery updates and ₹200 advance payment tracking'
+                      )
+                    }
                   />
 
-                  <Button type="submit" className="py-2.5 px-6 font-semibold" isLoading={profileLoading}>
+                  <Button type="submit" className="py-2.5 px-6 font-semibold cursor-pointer" isLoading={profileLoading}>
                     Save Changes
                   </Button>
                 </form>

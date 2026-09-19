@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ShoppingBag, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import GoogleLoginButton from '../components/auth/GoogleLoginButton';
+import { validateIndianPhone, validateEmail } from '../utils/validators';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -27,6 +28,17 @@ export default function Register() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  // Real-time phone and email checks
+  const phoneValidation = useMemo(() => {
+    if (!formData.phone) return { isValid: false, message: '' };
+    return validateIndianPhone(formData.phone);
+  }, [formData.phone]);
+
+  const emailValidation = useMemo(() => {
+    if (!formData.email) return { isValid: false, message: '' };
+    return validateEmail(formData.email);
+  }, [formData.email]);
 
   // Calculate Password Strength
   const passwordStrength = useMemo(() => {
@@ -56,8 +68,15 @@ export default function Register() {
       return;
     }
 
-    if (formData.phone.trim().length < 10) {
-      toast.error('Please enter a valid phone number (at least 10 digits)');
+    const emailCheck = validateEmail(formData.email);
+    if (!emailCheck.isValid) {
+      toast.error(emailCheck.message);
+      return;
+    }
+
+    const phoneCheck = validateIndianPhone(formData.phone);
+    if (!phoneCheck.isValid) {
+      toast.error(phoneCheck.message);
       return;
     }
 
@@ -78,7 +97,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const data = await register(formData.name, formData.email, formData.password, formData.phone);
+      const data = await register(formData.name.trim(), emailCheck.email, formData.password, phoneCheck.cleaned);
       toast.success(data.message || 'Account created successfully!');
       navigate('/');
     } catch (error) {
@@ -133,29 +152,43 @@ export default function Register() {
             placeholder="e.g. Rahul Rathore"
           />
 
-          <Input
-            label="Email address *"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            leftIcon={Mail}
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="name@example.com"
-          />
+          <div>
+            <Input
+              label="Email address *"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              leftIcon={Mail}
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="e.g. rahul@gmail.com"
+              error={formData.email && !emailValidation.isValid ? emailValidation.message : undefined}
+            />
+          </div>
 
-          <Input
-            label="Phone Number *"
-            name="phone"
-            type="tel"
-            required
-            leftIcon={Phone}
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+91 98765 43210"
-            helperText="Required for delivery coordination & order tracking"
-          />
+          <div>
+            <Input
+              label="10-Digit Mobile Number *"
+              name="phone"
+              type="tel"
+              required
+              leftIcon={Phone}
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="e.g. 8435930113"
+              error={formData.phone && !phoneValidation.isValid ? phoneValidation.message : undefined}
+              helperText={
+                formData.phone && phoneValidation.isValid ? (
+                  <span className="text-emerald-600 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Valid 10-digit mobile number
+                  </span>
+                ) : (
+                  'Must be a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9)'
+                )
+              }
+            />
+          </div>
 
 
           <div>

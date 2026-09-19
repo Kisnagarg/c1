@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Product = require('../models/Product');
 const Settings = require('../models/Settings');
+const { validateIndianPhone } = require('../utils/validators');
 
 // Create a booking / order with ₹200 Advance Payment requirement
 exports.createBooking = async (req, res) => {
@@ -8,17 +9,20 @@ exports.createBooking = async (req, res) => {
     const { items, phone, name, address, notes } = req.body;
 
     // Validate customer phone number (mandatory)
-    let customerPhone = phone || req.user.phone;
-    if (phone && phone.trim().length >= 10 && (!req.user.phone || req.user.phone !== phone.trim())) {
-      req.user.phone = phone.trim();
-      await req.user.save();
-    }
+    let rawPhone = phone || req.user.phone;
+    const phoneValidation = validateIndianPhone(rawPhone);
 
-    if (!customerPhone || customerPhone.trim().length < 10) {
+    if (!phoneValidation.isValid) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Customer phone number is mandatory (min. 10 digits) to complete booking.' 
+        message: phoneValidation.message 
       });
+    }
+
+    const customerPhone = phoneValidation.cleaned;
+    if (!req.user.phone || req.user.phone !== customerPhone) {
+      req.user.phone = customerPhone;
+      await req.user.save();
     }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
