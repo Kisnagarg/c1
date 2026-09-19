@@ -20,7 +20,7 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
   const [quickPhone, setQuickPhone] = useState('');
   const buttonContainerRef = useRef(null);
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1010978833106-r5tb5u4a2eep732ll9nhubld0gtnmihc.apps.googleusercontent.com';
 
   const handleCredentialResponse = async (response) => {
     if (!response || !response.credential) {
