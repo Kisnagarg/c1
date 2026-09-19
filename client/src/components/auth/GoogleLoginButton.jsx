@@ -1,25 +1,18 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Phone, Sparkles, X, ShieldCheck, User, CheckCircle2, AlertCircle } from 'lucide-react';
-import API from '../../api/axios';
-import { validateIndianPhone, validateEmail } from '../../utils/validators';
-import PhoneOtpModal from './PhoneOtpModal';
+import { Mail, Sparkles, X, ShieldCheck, User } from 'lucide-react';
+import { validateEmail } from '../../utils/validators';
 
 export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
-  const { googleLogin, updateUser } = useAuth();
+  const { googleLogin } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickGmailModal, setShowQuickGmailModal] = useState(false);
-  const [showPhonePromptModal, setShowPhonePromptModal] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [pendingUser, setPendingUser] = useState(null);
-  const [missingPhone, setMissingPhone] = useState('');
   
   const [quickEmail, setQuickEmail] = useState('');
   const [quickName, setQuickName] = useState('');
-  const [quickPhone, setQuickPhone] = useState('');
   const buttonContainerRef = useRef(null);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1010978833106-r5tb5u4a2eep732ll9nhubld0gtnmihc.apps.googleusercontent.com';
@@ -34,14 +27,7 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
     try {
       const data = await googleLogin({ credential: response.credential });
       
-      // If user profile has no phone number, prompt for mandatory phone number
-      if (!data.user?.phone) {
-        setPendingUser(data.user);
-        setShowPhonePromptModal(true);
-        return;
-      }
-
-      toast.success(data.message || 'Logged in with Google successfully!');
+      toast.success(data.message || `Welcome, ${data.user?.name || 'Customer'}!`);
       if (onSuccess) {
         onSuccess(data);
       } else {
@@ -53,45 +39,6 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const missingPhoneValidation = useMemo(() => {
-    if (!missingPhone) return { isValid: false, message: '' };
-    return validateIndianPhone(missingPhone);
-  }, [missingPhone]);
-
-  const handleMissingPhoneVerified = async ({ phone }) => {
-    setIsLoading(true);
-    try {
-      const res = await API.put('/auth/profile', { 
-        phone, 
-        isPhoneVerified: true 
-      });
-      updateUser(res.data.user);
-      toast.success('Mobile number verified & account ready!');
-      setShowPhonePromptModal(false);
-      setShowOtpModal(false);
-      if (onSuccess) {
-        onSuccess({ user: res.data.user });
-      } else {
-        navigate(redirectTo, { replace: true });
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to save phone number');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveMissingPhone = async (e) => {
-    e.preventDefault();
-    const phoneCheck = validateIndianPhone(missingPhone);
-    if (!phoneCheck.isValid) {
-      toast.error(phoneCheck.message);
-      return;
-    }
-
-    setShowOtpModal(true);
   };
 
   useEffect(() => {
@@ -154,12 +101,6 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
       return;
     }
 
-    const phoneCheck = validateIndianPhone(quickPhone);
-    if (!phoneCheck.isValid) {
-      toast.error(phoneCheck.message);
-      return;
-    }
-
     setIsLoading(true);
     try {
       const emailLower = emailCheck.email;
@@ -169,7 +110,6 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
       const data = await googleLogin({
         email: emailLower,
         name: derivedName,
-        phone: phoneCheck.cleaned,
         picture: randomAvatar,
         googleId: `google_demo_${Date.now()}`
       });
@@ -190,18 +130,18 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
 
   return (
     <div className="w-full">
-      {/* Official Google Button Mount point when client ID is provided */}
+      {/* Official Google Button Mount point */}
       {googleClientId && (
         <div ref={buttonContainerRef} className="w-full flex justify-center mb-3 min-h-[44px]" />
       )}
 
-      {/* Styled Google / Gmail Login Button */}
+      {/* Styled Google / Gmail Login Button Fallback */}
       {(!googleClientId || !window.google?.accounts?.id) && (
         <button
           type="button"
           onClick={handleCustomGoogleClick}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl border border-gray-300 shadow-sm hover:shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 active:scale-[0.99] disabled:opacity-60 cursor-pointer text-sm"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
@@ -225,11 +165,11 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
               />
             </svg>
           )}
-          <span className="text-sm font-semibold">Continue with Google / Gmail</span>
+          <span>Continue with Google</span>
         </button>
       )}
 
-      {/* Quick Gmail Sign-In Dialog (Instant SSO) */}
+      {/* Quick Gmail Sign-In Dialog (Instant SSO simulation for local dev/fallback) */}
       {showQuickGmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-gray-100">
@@ -244,9 +184,9 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
               <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
                 <Mail className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Sign in with Gmail</h3>
+              <h3 className="text-xl font-bold text-gray-900">Sign in with Google / Gmail</h3>
               <p className="text-xs text-gray-500 mt-1">
-                Enter your Gmail and contact number for instant account setup.
+                Enter your Gmail address for instant 1-click access.
               </p>
             </div>
 
@@ -277,7 +217,7 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="e.g. John Doe"
+                    placeholder="e.g. Rahul Sharma"
                     value={quickName}
                     onChange={(e) => setQuickName(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
@@ -285,28 +225,10 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Phone Number * (Mandatory)
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98765 43210"
-                    value={quickPhone}
-                    onChange={(e) => setQuickPhone(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-500 mt-1">Required for booking delivery updates & order tracking</p>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-800">
-                  Instant secure sign-in with verified profile creation.
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-800">
+                  Instant secure 1-click login. Your delivery phone & address can be provided during checkout.
                 </p>
               </div>
 
@@ -337,88 +259,6 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
           </div>
         </div>
       )}
-
-      {/* Mandatory Phone Prompt Modal for Google OAuth */}
-      {showPhonePromptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-gray-100">
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <Phone className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Phone Number Required</h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Welcome, {pendingUser?.name}! Please enter your contact phone number to complete your account setup.
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveMissingPhone} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
-                  <span>10-Digit Mobile Number *</span>
-                  {missingPhone && missingPhoneValidation.isValid && (
-                    <span className="text-emerald-600 text-[11px] font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Valid mobile number
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. 8435930113"
-                    value={missingPhone}
-                    onChange={(e) => setMissingPhone(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 border font-medium ${
-                      missingPhone && !missingPhoneValidation.isValid
-                        ? 'border-red-300 bg-red-50/40 focus:ring-red-500 focus:bg-white'
-                        : missingPhone && missingPhoneValidation.isValid
-                        ? 'border-emerald-300 bg-emerald-50/30 focus:ring-emerald-500 focus:bg-white'
-                        : 'border-gray-200 bg-gray-50 focus:ring-primary-500 focus:bg-white'
-                    }`}
-                    autoFocus
-                  />
-                </div>
-                {missingPhone && !missingPhoneValidation.isValid ? (
-                  <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> {missingPhoneValidation.message}
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    Mandatory for booking delivery updates & ₹200 advance payment tracking
-                  </p>
-                )}
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading || (missingPhone && !missingPhoneValidation.isValid)}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer transition-all"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" /> Verify Phone via SMS OTP
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Phone OTP Verification Modal for Google Auth */}
-      <PhoneOtpModal
-        isOpen={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        phone={missingPhone}
-        onVerified={handleMissingPhoneVerified}
-      />
     </div>
   );
 }
-

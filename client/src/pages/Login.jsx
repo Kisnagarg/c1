@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ShoppingBag, Eye, EyeOff, Lock, Mail, ShieldCheck, KeyRound, Sparkles, X, UserCheck } from 'lucide-react';
+import { 
+  Lock, 
+  Mail, 
+  ShieldCheck, 
+  Sparkles, 
+  X, 
+  UserCheck, 
+  Eye, 
+  EyeOff, 
+  ShieldAlert, 
+  ChevronDown, 
+  ChevronUp, 
+  ArrowRight,
+  Zap
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -14,6 +28,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showStaffLogin, setShowStaffLogin] = useState(false);
 
   // Forgot password modal state
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -55,7 +70,7 @@ export default function Login() {
       toast.success(data.message || `Welcome back, ${data.user?.name}!`);
       navigate(from, { replace: true });
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Invalid email or password');
+      toast.error(error.response?.data?.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -64,6 +79,7 @@ export default function Login() {
   const handleFillCredentials = (demoEmail, demoPass) => {
     setEmail(demoEmail);
     setPassword(demoPass);
+    setShowStaffLogin(true);
     toast.success(`Filled ${demoEmail} credentials!`);
   };
 
@@ -112,130 +128,155 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100/80 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md p-8 shadow-2xl rounded-2xl border border-gray-100 bg-white">
-        <div className="text-center mb-8">
+    <div className="min-h-[85vh] flex items-center justify-center bg-gradient-to-b from-gray-50 via-white to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md p-8 sm:p-9 shadow-2xl rounded-3xl border border-gray-100 bg-white relative overflow-hidden">
+        {/* Decorative background gradients */}
+        <div className="absolute -top-16 -right-16 w-36 h-36 bg-primary-100 rounded-full blur-2xl pointer-events-none opacity-60" />
+        <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-blue-100 rounded-full blur-2xl pointer-events-none opacity-60" />
+
+        <div className="text-center mb-8 relative">
           <img
             src="/logo.jpg"
             alt="Rathore Electronics"
             className="mx-auto w-16 h-16 rounded-2xl object-cover mb-4 shadow-xl ring-4 ring-primary-50 bg-black"
           />
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Welcome Back</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to access your orders and account
-          </p>
-        </div>
-
-        {/* 1-Click Fast Demo Switcher */}
-        <div className="mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-primary-600" /> Quick Demo Fill
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleFillCredentials('admin@rathoreelectronics.com', 'admin123')}
-              className="px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-primary-500 hover:text-primary-600 transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              👑 Admin Demo
-            </button>
-            <button
-              type="button"
-              onClick={() => handleFillCredentials('rohit@example.com', 'password123')}
-              className="px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-primary-500 hover:text-primary-600 transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              🛍️ Customer Demo
-            </button>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-full mb-2">
+            <Zap className="w-3.5 h-3.5 text-primary-600" /> Fast & Secure Sign-In
           </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Welcome Back</h1>
+          <p className="mt-1.5 text-sm text-gray-600">
+            Sign in to track orders, manage bookings & book electrical services
+          </p>
         </div>
 
-        {/* Google / Gmail Single Sign On */}
+        {/* Primary Action: Google 1-Tap Login */}
         <div className="mb-6">
           <GoogleLoginButton redirectTo={from} />
         </div>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-3 text-gray-400 font-medium">Or continue with password</span>
-          </div>
+        {/* 1-Click Trust Highlights */}
+        <div className="p-3.5 bg-gray-50/90 rounded-2xl border border-gray-100 mb-6 text-center">
+          <p className="text-xs text-gray-600 font-medium">
+            ⚡ <strong>1-Click Google Access:</strong> Instant sign-in with no passwords to remember.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email Address or Mobile Number"
-            type="text"
-            required
-            autoComplete="username"
-            leftIcon={UserCheck}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="e.g. name@gmail.com or 8435930113"
-          />
+        {/* Staff & Admin Login Toggle */}
+        <div className="border-t border-gray-100 pt-5">
+          <button
+            type="button"
+            onClick={() => setShowStaffLogin(!showStaffLogin)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <ShieldAlert className="w-3.5 h-3.5 text-gray-400" />
+              Staff / Admin Password Login
+            </span>
+            {showStaffLogin ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
 
-          <div>
-            <Input
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete="current-password"
-              leftIcon={Lock}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              rightElement={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded cursor-pointer"
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
-            />
-          </div>
+          {showStaffLogin && (
+            <div className="mt-4 pt-3 border-t border-dashed border-gray-200 animate-fade-in space-y-4">
+              {/* Quick Demo Switcher */}
+              <div className="p-2.5 bg-primary-50/50 rounded-xl border border-primary-100/60">
+                <p className="text-[11px] font-bold text-primary-900 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-primary-600" /> 1-Click Demo Fill
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleFillCredentials('admin@rathoreelectronics.com', 'admin123')}
+                    className="px-2 py-1.5 bg-white border border-primary-200 rounded-lg text-xs font-bold text-primary-700 hover:bg-primary-50 transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    👑 Admin Demo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFillCredentials('rohit@example.com', 'password123')}
+                    className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    🛍️ Customer Demo
+                  </button>
+                </div>
+              </div>
 
-          <div className="flex items-center justify-between text-sm pt-1">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
-              />
-              <span className="text-xs text-gray-600 font-medium">Remember me</span>
-            </label>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <Input
+                  label="Staff Email or Username"
+                  type="text"
+                  required
+                  autoComplete="username"
+                  leftIcon={UserCheck}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. admin@rathoreelectronics.com"
+                />
 
-            <button
-              type="button"
-              onClick={() => {
-                setForgotEmail(email);
-                setShowForgotModal(true);
-              }}
-              className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline cursor-pointer"
-            >
-              Forgot password?
-            </button>
-          </div>
+                <div>
+                  <Input
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    leftIcon={Lock}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    rightElement={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded cursor-pointer"
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
+                  />
+                </div>
 
-          <Button type="submit" className="w-full text-base font-semibold py-3 cursor-pointer shadow-md hover:shadow-lg transition-all" size="lg" isLoading={loading}>
-            Sign In to Account
-          </Button>
-        </form>
+                <div className="flex items-center justify-between text-sm pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-3.5 h-3.5 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
+                    />
+                    <span className="text-xs text-gray-600 font-medium">Remember me</span>
+                  </label>
 
-        <div className="mt-6 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(email);
+                      setShowForgotModal(true);
+                    }}
+                    className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline cursor-pointer"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                <Button type="submit" className="w-full text-sm font-bold py-2.5 cursor-pointer shadow-md hover:shadow-lg transition-all" size="md" isLoading={loading}>
+                  Sign In with Password
+                </Button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Register CTA */}
+        <div className="mt-6 text-center pt-4 border-t border-gray-100">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-500 hover:underline">
-              Create an account
+            New customer?{' '}
+            <Link to="/register" className="font-bold text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1">
+              Create account with Google <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </p>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-400">
+        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-400">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           <span>256-bit End-to-End SSL Encrypted Security</span>
         </div>
@@ -257,72 +298,74 @@ export default function Login() {
 
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <KeyRound className="w-6 h-6" />
+                <Lock className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-gray-900">
-                {resetStep === 1 ? 'Reset Your Password' : 'Set New Password'}
+                {resetStep === 1 ? 'Reset Your Password' : 'Enter Reset Code'}
               </h3>
               <p className="text-xs text-gray-500 mt-1">
                 {resetStep === 1 
-                  ? 'Enter your registered email address to receive reset instructions.'
-                  : 'Enter the verification code and your new password.'}
+                  ? 'Enter your registered email address to receive password reset instructions.' 
+                  : `Enter the 6-digit code sent for ${forgotEmail}`}
               </p>
             </div>
 
             {resetStep === 1 ? (
               <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
                 <Input
-                  label="Registered Email Address"
+                  label="Email Address"
                   type="email"
                   required
                   leftIcon={Mail}
-                  placeholder="name@example.com"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="admin@rathoreelectronics.com"
                   autoFocus
                 />
 
                 <div className="flex gap-3 pt-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    className="flex-1 cursor-pointer"
                     onClick={() => setShowForgotModal(false)}
-                    className="flex-1 py-2.5 px-4 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 cursor-pointer"
                   >
                     Cancel
-                  </button>
+                  </Button>
                   <Button
                     type="submit"
+                    className="flex-1 cursor-pointer"
                     isLoading={forgotLoading}
-                    className="flex-1 py-2.5 px-4 cursor-pointer"
                   >
-                    Send Reset Code
+                    Send Instructions
                   </Button>
                 </div>
               </form>
             ) : (
               <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
                 <Input
-                  label="Verification Code"
+                  label="Reset Code"
                   type="text"
                   required
-                  placeholder="6-digit code"
                   value={resetCode}
                   onChange={(e) => setResetCode(e.target.value)}
+                  placeholder="e.g. 123456"
+                  autoFocus
                 />
 
                 <Input
                   label="New Password"
                   type={showNewPassword ? 'text' : 'password'}
                   required
-                  placeholder="Min. 6 characters"
                   leftIcon={Lock}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
                   rightElement={
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded cursor-pointer"
                     >
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -330,19 +373,20 @@ export default function Login() {
                 />
 
                 <div className="flex gap-3 pt-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    className="flex-1 cursor-pointer"
                     onClick={() => setResetStep(1)}
-                    className="flex-1 py-2.5 px-4 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 cursor-pointer"
                   >
                     Back
-                  </button>
+                  </Button>
                   <Button
                     type="submit"
+                    className="flex-1 cursor-pointer"
                     isLoading={forgotLoading}
-                    className="flex-1 py-2.5 px-4 cursor-pointer"
                   >
-                    Save New Password
+                    Update Password
                   </Button>
                 </div>
               </form>
@@ -353,5 +397,3 @@ export default function Login() {
     </div>
   );
 }
-
-
