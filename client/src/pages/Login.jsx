@@ -115,9 +115,11 @@ export default function Login() {
     <div className="min-h-[85vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100/80 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md p-8 shadow-2xl rounded-2xl border border-gray-100 bg-white">
         <div className="text-center mb-8">
-          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-primary-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary-500/20 ring-4 ring-primary-50">
-            <ShoppingBag className="w-7 h-7 text-white" />
-          </div>
+          <img
+            src="/logo.jpg"
+            alt="Rathore Electronics"
+            className="mx-auto w-16 h-16 rounded-2xl object-cover mb-4 shadow-xl ring-4 ring-primary-50 bg-black"
+          />
           <h2 className="text-3xl font-black text-gray-900 tracking-tight">Welcome Back</h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to access your orders and account

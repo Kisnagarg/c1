@@ -67,7 +67,7 @@ export default function OrderPayment() {
   }, [id]);
 
   const advanceAmount = booking?.advanceAmount || settings.advanceAmount || 200;
-  const upiId = settings.upiId || '8435930113@upi';
+  const upiId = settings.upiId || '7067586097-2@axl';
   const businessName = settings.businessName || 'Rathore Electronics';
 
   // Standard UPI URI for scanning & app intents
@@ -302,21 +302,11 @@ export default function OrderPayment() {
                 {/* QR Code Presentation Box */}
                 <div className="bg-gradient-to-b from-gray-50 to-indigo-50/40 rounded-3xl p-6 sm:p-8 border border-indigo-100 text-center mb-6">
                   <div className="inline-block p-4 bg-white rounded-3xl shadow-xl border border-gray-100 ring-8 ring-indigo-50/70 mb-4">
-                    {settings.upiQrImage ? (
-                      <img 
-                        src={settings.upiQrImage} 
-                        alt="UPI QR Code" 
-                        className="w-56 h-56 sm:w-64 sm:h-64 object-contain rounded-2xl mx-auto"
-                      />
-                    ) : (
-                      <QRCodeSVG 
-                        value={upiUri} 
-                        size={240} 
-                        level="H" 
-                        includeMargin={true}
-                        className="w-56 h-56 sm:w-60 sm:h-60 mx-auto"
-                      />
-                    )}
+                    <img 
+                      src={settings.upiQrImage || '/phonepe-qr.png'} 
+                      alt="PhonePe UPI QR Code - Rathore Electronic and Electrical" 
+                      className="w-56 h-auto sm:w-64 object-contain rounded-2xl mx-auto shadow-sm"
+                    />
                   </div>
 
                   <div className="mt-2">

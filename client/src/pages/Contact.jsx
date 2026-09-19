@@ -36,7 +36,7 @@ export default function Contact() {
   const address = settings.address || 'Main Bus Stand, Atari Khejda, Vidisha, Madhya Pradesh';
   const ownerName = settings.ownerName || 'Mahendra Rathore';
   const businessName = settings.businessName || 'Rathore Electronics';
-  const email = settings.email || 'support@rathoreelectronics.com';
+  const email = settings.email || 'mrathore4440@gmail.com';
   const instagramUrl = settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/';
   const instagramHandle = settings.instagramHandle || '@rathore_electronics_';
 

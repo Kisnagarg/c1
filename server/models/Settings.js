@@ -38,18 +38,23 @@ const settingsSchema = new mongoose.Schema({
   email: {
     type: String,
     trim: true,
-    default: 'support@rathoreelectronics.com'
+    default: 'mrathore4440@gmail.com'
   },
   upiId: {
     type: String,
     required: true,
     trim: true,
-    default: '8435930113@upi'
+    default: '7067586097-2@axl'
   },
   upiQrImage: {
     type: String,
     trim: true,
-    default: ''
+    default: '/phonepe-qr.png'
+  },
+  logo: {
+    type: String,
+    trim: true,
+    default: '/logo.jpg'
   },
   instagramUrl: {
     type: String,
@@ -86,9 +91,10 @@ settingsSchema.statics.getSettings = async function() {
       primaryPhone: '8435930113',
       secondaryPhone: '7067586087',
       whatsappNumber: '8435930113',
-      email: 'support@rathoreelectronics.com',
-      upiId: '8435930113@upi',
-      upiQrImage: '',
+      email: 'mrathore4440@gmail.com',
+      upiId: '7067586097-2@axl',
+      upiQrImage: '/phonepe-qr.png',
+      logo: '/logo.jpg',
       instagramUrl: 'https://www.instagram.com/rathore_electronics_/',
       instagramHandle: '@rathore_electronics_',
       advanceAmount: 200,

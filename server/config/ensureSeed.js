@@ -195,9 +195,10 @@ const ensureSeedData = async () => {
         primaryPhone: '8435930113',
         secondaryPhone: '7067586087',
         whatsappNumber: '8435930113',
-        email: 'support@rathoreelectronics.com',
-        upiId: '8435930113@upi',
-        upiQrImage: '',
+        email: 'mrathore4440@gmail.com',
+        upiId: '7067586097-2@axl',
+        upiQrImage: '/phonepe-qr.png',
+        logo: '/logo.jpg',
         instagramUrl: 'https://www.instagram.com/rathore_electronics_/',
         instagramHandle: '@rathore_electronics_',
         advanceAmount: 200,
@@ -223,8 +224,20 @@ const ensureSeedData = async () => {
         settings.address = 'Main Bus Stand, Atari Khejda, Vidisha, Madhya Pradesh';
         updated = true;
       }
-      if (!settings.upiId) {
-        settings.upiId = '8435930113@upi';
+      if (!settings.email || settings.email === 'support@rathoreelectronics.com') {
+        settings.email = 'mrathore4440@gmail.com';
+        updated = true;
+      }
+      if (!settings.upiId || settings.upiId === '8435930113@upi') {
+        settings.upiId = '7067586097-2@axl';
+        updated = true;
+      }
+      if (!settings.upiQrImage) {
+        settings.upiQrImage = '/phonepe-qr.png';
+        updated = true;
+      }
+      if (!settings.logo) {
+        settings.logo = '/logo.jpg';
         updated = true;
       }
       if (!settings.instagramUrl) {

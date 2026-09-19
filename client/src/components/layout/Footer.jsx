@@ -12,7 +12,8 @@ export default function Footer() {
   const primaryPhone = settings.primaryPhone || '8435930113';
   const secondaryPhone = settings.secondaryPhone || '7067586087';
   const whatsappNumber = settings.whatsappNumber || '8435930113';
-  const email = settings.email || 'support@rathoreelectronics.com';
+  const email = settings.email || 'mrathore4440@gmail.com';
+  const logo = settings.logo || '/logo.jpg';
   const instagramUrl = settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/';
   const instagramHandle = settings.instagramHandle || '@rathore_electronics_';
 
@@ -34,11 +35,16 @@ export default function Footer() {
           
           {/* Brand & Owner */}
           <div className="md:col-span-1 space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-purple-500 rounded-xl flex items-center justify-center shadow-md">
-                <ShoppingBag className="w-5 h-5 text-white" />
+            <Link to="/" className="flex items-center gap-3 group">
+              <img
+                src={logo}
+                alt={businessName}
+                className="w-11 h-11 rounded-xl object-cover ring-2 ring-primary-500/30 shadow-lg group-hover:scale-105 transition-transform bg-black"
+              />
+              <div>
+                <span className="text-xl font-black text-white tracking-tight block leading-tight">{businessName}</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-primary-400 block">All Electrical Services</span>
               </div>
-              <span className="text-xl font-black text-white tracking-tight">{businessName}</span>
             </Link>
             <p className="text-xs text-gray-400 leading-relaxed">
               Your premier multi-category store for verified electronics, drones, wiring solutions, smart lighting, kitchen appliances, and RC toys.

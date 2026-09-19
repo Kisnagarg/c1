@@ -42,6 +42,7 @@ export default function AdminSettings() {
     email: '',
     upiId: '',
     upiQrImage: '',
+    logo: '',
     instagramUrl: '',
     instagramHandle: '',
     advanceAmount: 200
@@ -58,9 +59,10 @@ export default function AdminSettings() {
             primaryPhone: res.data.settings.primaryPhone || '8435930113',
             secondaryPhone: res.data.settings.secondaryPhone || '7067586087',
             whatsappNumber: res.data.settings.whatsappNumber || '8435930113',
-            email: res.data.settings.email || 'support@rathoreelectronics.com',
-            upiId: res.data.settings.upiId || '8435930113@upi',
-            upiQrImage: res.data.settings.upiQrImage || '',
+            email: res.data.settings.email || 'mrathore4440@gmail.com',
+            upiId: res.data.settings.upiId || '7067586097-2@axl',
+            upiQrImage: res.data.settings.upiQrImage || '/phonepe-qr.png',
+            logo: res.data.settings.logo || '/logo.jpg',
             instagramUrl: res.data.settings.instagramUrl || 'https://www.instagram.com/rathore_electronics_/',
             instagramHandle: res.data.settings.instagramHandle || '@rathore_electronics_',
             advanceAmount: res.data.settings.advanceAmount !== undefined ? res.data.settings.advanceAmount : 200
