@@ -165,14 +165,14 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Email address"
-            type="email"
+            label="Email Address or Mobile Number"
+            type="text"
             required
-            autoComplete="email"
-            leftIcon={Mail}
+            autoComplete="username"
+            leftIcon={UserCheck}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@example.com"
+            placeholder="e.g. name@gmail.com or 8435930113"
           />
 
           <div>

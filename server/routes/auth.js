@@ -29,7 +29,7 @@ router.post('/register', [
 
 // POST /api/auth/login
 router.post('/login', [
-  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('email').trim().notEmpty().withMessage('Please enter your email address or mobile number'),
   body('password').notEmpty().withMessage('Password is required')
 ], authController.login);
 

@@ -89,13 +89,21 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const rawIdentifier = (email || req.body.identifier || req.body.phone || '').trim();
+    const identifierLower = rawIdentifier.toLowerCase();
+    const cleanedDigits = cleanPhone(rawIdentifier);
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({
+      $or: [
+        { email: identifierLower },
+        ...(cleanedDigits.length === 10 ? [{ phone: cleanedDigits }] : [])
+      ]
+    }).select('+password');
+
     if (!user) {
       return res.status(401).json({ 
         success: false, 
-        message: 'Invalid email or password.' 
+        message: 'Invalid email/phone or password.' 
       });
     }
 
@@ -110,7 +118,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ 
         success: false, 
-        message: 'Invalid email or password.' 
+        message: 'Invalid email/phone or password.' 
       });
     }
 
