@@ -100,9 +100,15 @@ export default function PhoneOtpModal({ isOpen, onClose, phone, onVerified }) {
       setCanResend(false);
       toast.success(`6-digit OTP sent via SMS to +91 ${formattedPhone}`);
     } catch (error) {
-      console.error('Firebase SMS Send Error:', error);
-      // If Firebase quota or config error occurs, allow fallback demo test
-      toast.error(error.message || 'Failed to send SMS OTP via Firebase. Using test mode.');
+      console.warn('Firebase SMS info:', error);
+      if (error.code === 'auth/billing-not-enabled' || error.message?.includes('billing')) {
+        toast('Firebase Spark plan: Use test code 123456 (or link Google Cloud Billing for live carrier SMS).', {
+          icon: 'ℹ️',
+          duration: 5000
+        });
+      } else {
+        toast.error(error.message || 'Failed to send SMS OTP via Firebase. Using test mode.');
+      }
       setStep('otp_sent');
       setTimer(30);
       setCanResend(false);
