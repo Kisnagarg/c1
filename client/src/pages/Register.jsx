@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ShoppingBag, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import GoogleLoginButton from '../components/auth/GoogleLoginButton';
+import PhoneOtpModal from '../components/auth/PhoneOtpModal';
 import { validateIndianPhone, validateEmail } from '../utils/validators';
 
 export default function Register() {
@@ -17,6 +18,8 @@ export default function Register() {
     password: '',
     confirmPassword: ''
   });
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
@@ -26,6 +29,9 @@ export default function Register() {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    if (e.target.name === 'phone') {
+      setIsPhoneVerified(false);
+    }
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -61,6 +67,11 @@ export default function Register() {
   const passwordsMatch = formData.confirmPassword && formData.password === formData.confirmPassword;
   const passwordsMismatch = formData.confirmPassword && formData.password !== formData.confirmPassword;
 
+  const handlePhoneVerified = ({ phone }) => {
+    setIsPhoneVerified(true);
+    setFormData(prev => ({ ...prev, phone }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.phone || !formData.password) {
@@ -95,9 +106,24 @@ export default function Register() {
       return;
     }
 
+    // Require phone OTP verification
+    if (!isPhoneVerified) {
+      setShowOtpModal(true);
+      toast('Please verify your phone number via OTP to complete registration.', {
+        icon: '📱'
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await register(formData.name.trim(), emailCheck.email, formData.password, phoneCheck.cleaned);
+      const data = await register(
+        formData.name.trim(), 
+        emailCheck.email, 
+        formData.password, 
+        phoneCheck.cleaned,
+        true
+      );
       toast.success(data.message || 'Account created successfully!');
       navigate('/');
     } catch (error) {
@@ -178,10 +204,29 @@ export default function Register() {
               onChange={handleChange}
               placeholder="e.g. 8435930113"
               error={formData.phone && !phoneValidation.isValid ? phoneValidation.message : undefined}
+              rightElement={
+                isPhoneVerified ? (
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Verified
+                  </span>
+                ) : formData.phone && phoneValidation.isValid ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowOtpModal(true)}
+                    className="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3 h-3" /> Verify OTP
+                  </button>
+                ) : null
+              }
               helperText={
-                formData.phone && phoneValidation.isValid ? (
+                isPhoneVerified ? (
                   <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Valid 10-digit mobile number
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Mobile number verified via SMS OTP
+                  </span>
+                ) : formData.phone && phoneValidation.isValid ? (
+                  <span className="text-primary-600 font-medium flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" /> Click 'Verify OTP' to confirm your phone number
                   </span>
                 ) : (
                   'Must be a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9)'
@@ -298,6 +343,14 @@ export default function Register() {
           <span>Your data is protected with 256-bit SSL encryption</span>
         </div>
       </Card>
+
+      {/* Firebase Phone OTP Modal */}
+      <PhoneOtpModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        phone={formData.phone}
+        onVerified={handlePhoneVerified}
+      />
     </div>
   );
 }

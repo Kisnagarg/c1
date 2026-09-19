@@ -39,8 +39,8 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
-  const register = async (name, email, password, phone) => {
-    const res = await API.post('/auth/register', { name, email, password, phone });
+  const register = async (name, email, password, phone, isPhoneVerified = false) => {
+    const res = await API.post('/auth/register', { name, email, password, phone, isPhoneVerified });
     localStorage.setItem('bookmart_token', res.data.token);
     localStorage.setItem('bookmart_user', JSON.stringify(res.data.user));
     setUser(res.data.user);

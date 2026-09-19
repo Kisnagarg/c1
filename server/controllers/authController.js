@@ -20,7 +20,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, isPhoneVerified } = req.body;
 
     // 1. Strict Email Verification
     const emailValidation = validateEmail(email);
@@ -55,10 +55,10 @@ exports.register = async (req, res) => {
       name: name.trim(), 
       email: normalizedEmail, 
       password, 
-      phone: normalizedPhone 
+      phone: normalizedPhone,
+      isPhoneVerified: Boolean(isPhoneVerified)
     });
     const token = generateToken(user);
-
 
     res.status(201).json({
       success: true,
@@ -69,6 +69,8 @@ exports.register = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        isPhoneVerified: user.isPhoneVerified,
+        isEmailVerified: user.isEmailVerified,
         avatar: user.avatar || '',
         role: user.role
       }
@@ -123,6 +125,8 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        isPhoneVerified: user.isPhoneVerified || false,
+        isEmailVerified: user.isEmailVerified || false,
         avatar: user.avatar || '',
         role: user.role
       }
@@ -137,11 +141,10 @@ exports.login = async (req, res) => {
 exports.googleLogin = async (req, res) => {
   try {
     const { credential, email: directEmail, name: directName, picture: directAvatar, googleId: directGoogleId, phone: directPhone } = req.body;
-
     let email = directEmail;
     let name = directName;
-    let avatar = directAvatar || '';
-    let googleId = directGoogleId || '';
+    let avatar = directAvatar;
+    let googleId = directGoogleId;
     let phone = directPhone || '';
 
 
@@ -151,10 +154,10 @@ exports.googleLogin = async (req, res) => {
         const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
         if (response.ok) {
           const payload = await response.json();
-          email = payload.email || email;
-          name = payload.name || payload.given_name || name;
-          avatar = payload.picture || avatar;
-          googleId = payload.sub || googleId;
+          email = payload.email;
+          name = payload.name;
+          avatar = payload.picture;
+          googleId = payload.sub;
         } else {
           // Fallback: decode the JWT payload
           try {
@@ -229,6 +232,7 @@ exports.googleLogin = async (req, res) => {
         const phoneCheck = validateIndianPhone(phone);
         if (phoneCheck.isValid) {
           user.phone = phoneCheck.cleaned;
+          user.isPhoneVerified = true;
           modified = true;
         }
       }
@@ -249,6 +253,8 @@ exports.googleLogin = async (req, res) => {
         name: name || email.split('@')[0],
         email,
         phone: cleanedPhone,
+        isPhoneVerified: Boolean(cleanedPhone),
+        isEmailVerified: true,
         password: generatedPassword,
         googleId: googleId || `google_${Date.now()}`,
         avatar,
@@ -269,6 +275,8 @@ exports.googleLogin = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone || '',
+        isPhoneVerified: user.isPhoneVerified || false,
+        isEmailVerified: user.isEmailVerified || true,
         avatar: user.avatar || '',
         role: user.role
       }
@@ -294,6 +302,8 @@ exports.getMe = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        isPhoneVerified: user.isPhoneVerified || false,
+        isEmailVerified: user.isEmailVerified || false,
         avatar: user.avatar || '',
         role: user.role,
         createdAt: user.createdAt
@@ -313,7 +323,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { name, phone } = req.body;
+    const { name, phone, isPhoneVerified } = req.body;
 
     const phoneValidation = validateIndianPhone(phone);
     if (!phoneValidation.isValid) {
@@ -326,6 +336,9 @@ exports.updateProfile = async (req, res) => {
     const updateData = { phone: phoneValidation.cleaned };
     if (name && name.trim()) {
       updateData.name = name.trim();
+    }
+    if (typeof isPhoneVerified === 'boolean') {
+      updateData.isPhoneVerified = isPhoneVerified;
     }
 
     const user = await User.findByIdAndUpdate(
@@ -342,6 +355,8 @@ exports.updateProfile = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        isPhoneVerified: user.isPhoneVerified || false,
+        isEmailVerified: user.isEmailVerified || false,
         avatar: user.avatar || '',
         role: user.role
       }

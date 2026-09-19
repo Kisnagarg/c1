@@ -13,7 +13,8 @@ import {
   QrCode,
   FileText,
   AlertCircle,
-  IndianRupee
+  IndianRupee,
+  Sparkles
 } from 'lucide-react';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +22,7 @@ import { useSettings } from '../context/SettingsContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
+import PhoneOtpModal from '../components/auth/PhoneOtpModal';
 import { formatPrice } from '../utils/helpers';
 import { validateIndianPhone } from '../utils/validators';
 
@@ -41,6 +43,8 @@ export default function Booking() {
   const [customerName, setCustomerName] = useState(user?.name || '');
   const [shippingAddress, setShippingAddress] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(Boolean(user?.isPhoneVerified && user?.phone));
 
   const advanceAmount = settings?.advanceAmount || 200;
 
@@ -72,6 +76,22 @@ export default function Booking() {
     if (!customerPhone) return { isValid: false, message: '' };
     return validateIndianPhone(customerPhone);
   }, [customerPhone]);
+
+  const handlePhoneVerified = async ({ phone }) => {
+    setIsPhoneVerified(true);
+    setCustomerPhone(phone);
+    try {
+      const profileRes = await API.put('/auth/profile', { 
+        phone, 
+        name: customerName || user?.name,
+        isPhoneVerified: true
+      });
+      if (profileRes.data.user) updateUser(profileRes.data.user);
+    } catch (e) {
+      console.warn('Profile sync notice:', e);
+    }
+    toast.success('Mobile number verified!');
+  };
 
   const handleConfirm = async () => {
     const rawPhone = (customerPhone || user?.phone || '').trim();
@@ -219,11 +239,19 @@ export default function Booking() {
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
                     <span>10-Digit Mobile Number * (Mandatory for Delivery)</span>
-                    {customerPhone && phoneValidation.isValid && (
+                    {isPhoneVerified ? (
                       <span className="text-emerald-600 text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Valid mobile number
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Verified via OTP
                       </span>
-                    )}
+                    ) : customerPhone && phoneValidation.isValid ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowOtpModal(true)}
+                        className="px-2 py-0.5 bg-primary-600 hover:bg-primary-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-xs cursor-pointer transition-all"
+                      >
+                        <Sparkles className="w-3 h-3" /> Verify OTP
+                      </button>
+                    ) : null}
                   </label>
                   
                   <div className="relative">
@@ -233,7 +261,14 @@ export default function Booking() {
                       required
                       placeholder="e.g. 8435930113"
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => {
+                        setCustomerPhone(e.target.value);
+                        if (user?.isPhoneVerified && e.target.value.trim() === user.phone) {
+                          setIsPhoneVerified(true);
+                        } else {
+                          setIsPhoneVerified(false);
+                        }
+                      }}
                       className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 font-medium ${
                         customerPhone && !phoneValidation.isValid
                           ? 'border-red-300 bg-red-50/40 focus:ring-red-500 focus:bg-white'
@@ -246,6 +281,10 @@ export default function Booking() {
                   {customerPhone && !phoneValidation.isValid ? (
                     <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {phoneValidation.message}
+                    </p>
+                  ) : isPhoneVerified ? (
+                    <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Mobile number verified for ₹200 advance payment tracking.
                     </p>
                   ) : (
                     <p className="text-[11px] text-gray-500 mt-1">
@@ -326,6 +365,14 @@ export default function Booking() {
           
         </div>
       </div>
+
+      {/* Phone OTP Verification Modal */}
+      <PhoneOtpModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        phone={customerPhone}
+        onVerified={handlePhoneVerified}
+      />
     </div>
   );
 }

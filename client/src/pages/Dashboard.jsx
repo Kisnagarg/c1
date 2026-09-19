@@ -44,6 +44,7 @@ import {
   getPaymentStatusColor 
 } from '../utils/helpers';
 import { validateIndianPhone } from '../utils/validators';
+import PhoneOtpModal from '../components/auth/PhoneOtpModal';
 
 export default function Dashboard() {
   const { user, logout, updateUser } = useAuth();
@@ -61,6 +62,7 @@ export default function Dashboard() {
     phone: user?.phone || ''
   });
   const [profileLoading, setProfileLoading] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
 
   // Password Change state
   const [passwordForm, setPasswordForm] = useState({
@@ -84,6 +86,24 @@ export default function Dashboard() {
     return validateIndianPhone(profileForm.phone);
   }, [profileForm.phone]);
 
+  const handlePhoneVerified = async ({ phone }) => {
+    setProfileLoading(true);
+    try {
+      const res = await API.put('/auth/profile', {
+        name: profileForm.name.trim() || user.name,
+        phone,
+        isPhoneVerified: true
+      });
+      updateUser(res.data.user);
+      setProfileForm(prev => ({ ...prev, phone }));
+      toast.success('Mobile number verified & saved!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update profile verification');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     if (!profileForm.name || !profileForm.name.trim()) {
@@ -97,11 +117,15 @@ export default function Dashboard() {
       return;
     }
 
+    const isSamePhone = user?.phone === phoneCheck.cleaned;
+    const isVerified = isSamePhone ? Boolean(user?.isPhoneVerified) : false;
+
     setProfileLoading(true);
     try {
       const res = await API.put('/auth/profile', {
         name: profileForm.name.trim(),
-        phone: phoneCheck.cleaned
+        phone: phoneCheck.cleaned,
+        isPhoneVerified: isVerified
       });
       updateUser(res.data.user);
       toast.success(res.data.message || 'Profile updated successfully!');
@@ -449,10 +473,29 @@ export default function Dashboard() {
                     value={profileForm.phone}
                     onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                     error={profileForm.phone && !phoneValidation.isValid ? phoneValidation.message : undefined}
+                    rightElement={
+                      user?.isPhoneVerified && profileForm.phone === user.phone ? (
+                        <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Verified
+                        </span>
+                      ) : profileForm.phone && phoneValidation.isValid ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowOtpModal(true)}
+                          className="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                        >
+                          <Sparkles className="w-3 h-3" /> Verify OTP
+                        </button>
+                      ) : null
+                    }
                     helperText={
-                      profileForm.phone && phoneValidation.isValid ? (
+                      user?.isPhoneVerified && profileForm.phone === user.phone ? (
                         <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Valid 10-digit mobile number
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Mobile number verified via SMS OTP
+                        </span>
+                      ) : profileForm.phone && phoneValidation.isValid ? (
+                        <span className="text-primary-600 font-medium flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5" /> Click 'Verify OTP' to confirm this phone number
                         </span>
                       ) : (
                         'Mandatory for delivery updates and ₹200 advance payment tracking'
@@ -535,6 +578,14 @@ export default function Dashboard() {
           
         </div>
       </div>
+
+      {/* Phone OTP Verification Modal */}
+      <PhoneOtpModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        phone={profileForm.phone}
+        onVerified={handlePhoneVerified}
+      />
     </div>
   );
 }
