@@ -61,5 +61,13 @@ router.post('/forgot-password', authController.forgotPassword);
 // POST /api/auth/reset-password
 router.post('/reset-password', authController.resetPassword);
 
+// POST /api/auth/send-otp (and backwards-compatible /send-email-otp)
+router.post('/send-otp', authController.sendOtp);
+router.post('/send-email-otp', authController.sendOtp);
+
+// POST /api/auth/verify-otp (and backwards-compatible /verify-email-otp)
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/verify-email-otp', authController.verifyOtp);
+
 module.exports = router;
 

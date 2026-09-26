@@ -39,13 +39,26 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
-  const register = async (name, email, password, phone, isPhoneVerified = false) => {
-    const res = await API.post('/auth/register', { name, email, password, phone, isPhoneVerified });
+  const register = async (name, email, password, phone, isPhoneVerified = false, isEmailVerified = true) => {
+    const res = await API.post('/auth/register', { name, email, password, phone, isPhoneVerified, isEmailVerified });
     localStorage.setItem('bookmart_token', res.data.token);
     localStorage.setItem('bookmart_user', JSON.stringify(res.data.user));
     setUser(res.data.user);
     return res.data;
   };
+
+  const sendOtp = async (email) => {
+    const res = await API.post('/auth/send-otp', { email });
+    return res.data;
+  };
+
+  const verifyOtp = async (email, otp) => {
+    const res = await API.post('/auth/verify-otp', { email, otp });
+    return res.data;
+  };
+
+  const sendEmailOtp = sendOtp;
+  const verifyEmailOtp = verifyOtp;
 
   const googleLogin = async (payload) => {
     const res = await API.post('/auth/google', payload);
@@ -82,6 +95,10 @@ export function AuthProvider({ children }) {
       loading, 
       login, 
       register, 
+      sendOtp,
+      verifyOtp,
+      sendEmailOtp,
+      verifyEmailOtp,
       googleLogin, 
       forgotPassword, 
       resetPassword, 

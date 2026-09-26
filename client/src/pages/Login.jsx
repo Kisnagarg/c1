@@ -7,14 +7,13 @@ import {
   ShieldCheck, 
   Sparkles, 
   X, 
-  UserCheck, 
   Eye, 
   EyeOff, 
   ShieldAlert, 
-  ChevronDown, 
-  ChevronUp, 
   ArrowRight,
-  Zap
+  Zap,
+  CheckCircle2,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
@@ -28,7 +27,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [showStaffLogin, setShowStaffLogin] = useState(false);
 
   // Forgot password modal state
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -52,35 +50,36 @@ export default function Login() {
     }
   }, []);
 
+  const handleSuccessfulLogin = (userData) => {
+    toast.success(`Welcome back, ${userData?.name || 'User'}!`);
+    if (userData?.role === 'admin' && from === '/') {
+      navigate('/admin', { replace: true });
+    } else {
+      navigate(from, { replace: true });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error('Please fill in both email and password');
+    if (!email.trim() || !password) {
+      toast.error('Please enter both email/phone and password');
       return;
     }
 
     setLoading(true);
     try {
-      const data = await login(email, password);
+      const data = await login(email.trim(), password);
       if (rememberMe) {
-        localStorage.setItem('rathore_remembered_email', email);
+        localStorage.setItem('rathore_remembered_email', email.trim());
       } else {
         localStorage.removeItem('rathore_remembered_email');
       }
-      toast.success(data.message || `Welcome back, ${data.user?.name}!`);
-      navigate(from, { replace: true });
+      handleSuccessfulLogin(data.user);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Invalid credentials');
+      toast.error(error.response?.data?.message || 'Invalid email/phone or password');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFillCredentials = (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setShowStaffLogin(true);
-    toast.success(`Filled ${demoEmail} credentials!`);
   };
 
   const handleForgotPasswordSubmit = async (e) => {
@@ -134,7 +133,7 @@ export default function Login() {
         <div className="absolute -top-16 -right-16 w-36 h-36 bg-primary-100 rounded-full blur-2xl pointer-events-none opacity-60" />
         <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-blue-100 rounded-full blur-2xl pointer-events-none opacity-60" />
 
-        <div className="text-center mb-8 relative">
+        <div className="text-center mb-6 relative">
           <img
             src="/logo.jpg"
             alt="Rathore Electronics"
@@ -149,129 +148,101 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Primary Action: Google 1-Tap Login */}
-        <div className="mb-6">
-          <GoogleLoginButton redirectTo={from} />
+        {/* Primary Action 1: 1-Tap Google Login */}
+        <div className="mb-4">
+          <GoogleLoginButton 
+            redirectTo={from} 
+            onSuccess={(data) => handleSuccessfulLogin(data.user)} 
+          />
         </div>
 
-        {/* 1-Click Trust Highlights */}
-        <div className="p-3.5 bg-gray-50/90 rounded-2xl border border-gray-100 mb-6 text-center">
-          <p className="text-xs text-gray-600 font-medium">
-            ⚡ <strong>1-Click Google Access:</strong> Instant sign-in with no passwords to remember.
-          </p>
-        </div>
-
-        {/* Staff & Admin Login Toggle */}
-        <div className="border-t border-gray-100 pt-5">
-          <button
-            type="button"
-            onClick={() => setShowStaffLogin(!showStaffLogin)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all cursor-pointer"
-          >
-            <span className="flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-gray-400" />
-              Staff / Admin Password Login
+        {/* Clean Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-gray-500 font-semibold tracking-wider">
+              Or sign in with email / phone
             </span>
-            {showStaffLogin ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-
-          {showStaffLogin && (
-            <div className="mt-4 pt-3 border-t border-dashed border-gray-200 animate-fade-in space-y-4">
-              {/* Quick Demo Switcher */}
-              <div className="p-2.5 bg-primary-50/50 rounded-xl border border-primary-100/60">
-                <p className="text-[11px] font-bold text-primary-900 uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-primary-600" /> 1-Click Demo Fill
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleFillCredentials('admin@rathoreelectronics.com', 'admin123')}
-                    className="px-2 py-1.5 bg-white border border-primary-200 rounded-lg text-xs font-bold text-primary-700 hover:bg-primary-50 transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    👑 Admin Demo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFillCredentials('rohit@example.com', 'password123')}
-                    className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    🛍️ Customer Demo
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <Input
-                  label="Staff Email or Username"
-                  type="text"
-                  required
-                  autoComplete="username"
-                  leftIcon={UserCheck}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. admin@rathoreelectronics.com"
-                />
-
-                <div>
-                  <Input
-                    label="Password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="current-password"
-                    leftIcon={Lock}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    rightElement={
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded cursor-pointer"
-                        title={showPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-sm pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-3.5 h-3.5 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
-                    />
-                    <span className="text-xs text-gray-600 font-medium">Remember me</span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForgotEmail(email);
-                      setShowForgotModal(true);
-                    }}
-                    className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline cursor-pointer"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-
-                <Button type="submit" className="w-full text-sm font-bold py-2.5 cursor-pointer shadow-md hover:shadow-lg transition-all" size="md" isLoading={loading}>
-                  Sign In with Password
-                </Button>
-              </form>
-            </div>
-          )}
+          </div>
         </div>
+
+        {/* Standard Email & Password Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Email Address or Mobile Number"
+            type="text"
+            required
+            autoComplete="username"
+            leftIcon={Mail}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@gmail.com or 10-digit mobile"
+          />
+
+          <div>
+            <Input
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              autoComplete="current-password"
+              leftIcon={Lock}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-sm pt-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-3.5 h-3.5 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
+              />
+              <span className="text-xs text-gray-600 font-medium">Remember me</span>
+            </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                setForgotEmail(email);
+                setShowForgotModal(true);
+              }}
+              className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline cursor-pointer"
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full text-sm font-bold py-2.5 cursor-pointer shadow-md hover:shadow-lg transition-all" 
+            size="md" 
+            isLoading={loading}
+          >
+            Sign In with Password
+          </Button>
+        </form>
 
         {/* Register CTA */}
         <div className="mt-6 text-center pt-4 border-t border-gray-100">
           <p className="text-sm text-gray-600">
             New customer?{' '}
             <Link to="/register" className="font-bold text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1">
-              Create account with Google <ArrowRight className="w-3.5 h-3.5" />
+              Create account with email or Google <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </p>
         </div>
