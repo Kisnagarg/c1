@@ -5,8 +5,28 @@ const uploadController = require('../controllers/uploadController');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
-// Use multer memory storage
-const storage = multer.memoryStorage();
+const path = require('path');
+const fs = require('fs');
+
+// Ensure uploads folder exists
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Multer disk storage for local uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const sanitizedBase = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${sanitizedBase}-${uniqueSuffix}${ext}`);
+  }
+});
+
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per image

@@ -84,3 +84,22 @@ export function truncate(str, len = 80) {
   if (!str) return '';
   return str.length > len ? str.slice(0, len) + '...' : str;
 }
+
+export function getImageUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  // If it's a relative uploads path
+  const backendBase = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
+    : '';
+  if (url.startsWith('/uploads')) {
+    return backendBase ? `${backendBase}${url}` : url;
+  }
+  if (url.startsWith('uploads/')) {
+    return backendBase ? `${backendBase}/${url}` : `/${url}`;
+  }
+  return url;
+}
+

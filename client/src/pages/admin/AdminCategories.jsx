@@ -93,7 +93,7 @@ export default function AdminCategories() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setFormData(prev => ({ ...prev, image: res.data.url }));
-      toast.success('Image uploaded successfully to cloud!');
+      toast.success('Image uploaded successfully!');
     } catch (error) {
       const msg = error.response?.data?.message || 'Upload failed. You can paste an image URL instead.';
       toast.error(msg);
@@ -359,7 +359,7 @@ export default function AdminCategories() {
                     }`}>
                       <Upload className="w-4 h-4 text-primary-600" />
                       <span className="text-xs font-medium">
-                        {uploadingImage ? 'Uploading to Cloud...' : 'Upload Image File (Cloudinary)'}
+                        {uploadingImage ? 'Uploading...' : 'Upload Image File'}
                       </span>
                       <input
                         type="file"

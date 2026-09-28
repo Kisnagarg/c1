@@ -108,7 +108,7 @@ export default function AdminProductForm() {
           image: prev.image || newUrl,
           images: [...prev.images, newUrl]
         }));
-        toast.success('Image uploaded to cloud!');
+        toast.success('Image uploaded successfully!');
       } else {
         const data = new FormData();
         files.forEach(f => data.append('images', f));
@@ -121,7 +121,7 @@ export default function AdminProductForm() {
           image: prev.image || newUrls[0],
           images: [...prev.images, ...newUrls]
         }));
-        toast.success(`${newUrls.length} images uploaded to cloud!`);
+        toast.success(`${newUrls.length} images uploaded successfully!`);
       }
     } catch (error) {
       const msg = error.response?.data?.message || 'Upload failed. You can paste an image URL instead.';
@@ -372,7 +372,7 @@ export default function AdminProductForm() {
             }`}>
               <Upload className="w-5 h-5 text-primary-600" />
               <span className="text-sm font-semibold">
-                {uploadingImage ? 'Uploading to Cloudinary...' : 'Upload Image File(s)'}
+                {uploadingImage ? 'Uploading...' : 'Upload Image File(s)'}
               </span>
               <input
                 type="file"

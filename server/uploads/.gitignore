@@ -1,0 +1,4 @@
+# Ignore user uploads except placeholder / keepfile
+*
+!.gitignore
+!.gitkeep

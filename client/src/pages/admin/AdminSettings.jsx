@@ -383,7 +383,7 @@ export default function AdminSettings() {
                 <input
                   type="url"
                   name="upiQrImage"
-                  placeholder="https://res.cloudinary.com/... or upload below"
+                  placeholder="/uploads/... or paste an image URL"
                   value={formData.upiQrImage}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary-500 text-xs font-mono text-gray-700"
@@ -425,7 +425,7 @@ export default function AdminSettings() {
               {/* Upload or Replace Button */}
               <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 hover:border-primary-500 rounded-xl text-xs font-bold text-gray-700 hover:text-primary-600 cursor-pointer shadow-sm transition-all">
                 <Upload className="w-4 h-4" />
-                <span>{formData.upiQrImage ? 'Replace QR Code Image' : 'Upload Shop QR Code (Cloudinary)'}</span>
+                <span>{formData.upiQrImage ? 'Replace QR Code Image' : 'Upload Shop QR Code'}</span>
                 <input 
                   type="file" 
                   accept="image/*" 

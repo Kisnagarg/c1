@@ -1,14 +1,38 @@
-const cloudinary = require('cloudinary').v2;
+const path = require('path');
+const fs = require('fs');
 
-// Configure Cloudinary from environment variables
-if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true
-  });
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+// Helper to construct public URL for uploaded file
+const getFileUrl = (req, filename) => {
+  return `/uploads/${filename}`;
+};
+
+// Helper to save base64 data URI to disk if sent in request body
+const saveBase64ToFile = (base64String, prefix = 'upload') => {
+  const matches = base64String.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+  let ext = '.png';
+  let buffer;
+
+  if (matches && matches.length === 3) {
+    const mime = matches[1];
+    if (mime.includes('jpeg') || mime.includes('jpg')) ext = '.jpg';
+    else if (mime.includes('webp')) ext = '.webp';
+    else if (mime.includes('gif')) ext = '.gif';
+    else if (mime.includes('svg')) ext = '.svg';
+    buffer = Buffer.from(matches[2], 'base64');
+  } else {
+    buffer = Buffer.from(base64String, 'base64');
+  }
+
+  const filename = `${prefix}-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+  const filePath = path.join(uploadsDir, filename);
+  fs.writeFileSync(filePath, buffer);
+  return filename;
+};
 
 // Upload a single image (Admin)
 exports.uploadSingleImage = async (req, res) => {
@@ -17,52 +41,33 @@ exports.uploadSingleImage = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No image file or data provided.' });
     }
 
-    const isCloudinaryConfigured = Boolean(
-      process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-    );
-
-    if (!isCloudinaryConfigured) {
-      // If direct image URL provided in body, return it
-      if (req.body.image && (req.body.image.startsWith('http://') || req.body.image.startsWith('https://'))) {
-        return res.json({
-          success: true,
-          url: req.body.image,
-          publicId: 'remote-url'
-        });
-      }
-      return res.status(400).json({
-        success: false,
-        message: 'Cloudinary credentials are not set. Please configure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your environment variables, or enter an Image URL directly.'
+    // If an external URL is provided directly in body, reuse it
+    if (req.body.image && (req.body.image.startsWith('http://') || req.body.image.startsWith('https://') || req.body.image.startsWith('/uploads/'))) {
+      return res.json({
+        success: true,
+        url: req.body.image,
+        filename: path.basename(req.body.image)
       });
     }
 
-    let uploadResult;
-    const folderName = req.body.folder || 'rathore_electronics/cms';
-
+    let filename;
     if (req.file) {
-      const b64 = Buffer.from(req.file.buffer).toString('base64');
-      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-      uploadResult = await cloudinary.uploader.upload(dataURI, {
-        folder: folderName,
-        resource_type: 'auto'
-      });
-    } else if (req.body.image) {
-      uploadResult = await cloudinary.uploader.upload(req.body.image, {
-        folder: folderName,
-        resource_type: 'auto'
-      });
+      filename = req.file.filename;
+    } else if (req.body.image && req.body.image.startsWith('data:')) {
+      filename = saveBase64ToFile(req.body.image, 'img');
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid image format provided.' });
     }
+
+    const fileUrl = getFileUrl(req, filename);
 
     return res.json({
       success: true,
-      url: uploadResult.secure_url,
-      publicId: uploadResult.public_id
+      url: fileUrl,
+      filename
     });
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
+    console.error('Upload single image error:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Image upload failed.'
@@ -77,45 +82,28 @@ exports.uploadPaymentProof = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No screenshot file provided.' });
     }
 
-    const isCloudinaryConfigured = Boolean(
-      process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-    );
-
-    if (!isCloudinaryConfigured) {
-      if (req.body.image && (req.body.image.startsWith('http://') || req.body.image.startsWith('https://'))) {
-        return res.json({
-          success: true,
-          url: req.body.image
-        });
-      }
-      return res.status(400).json({
-        success: false,
-        message: 'Cloudinary storage is not configured for image uploads.'
+    if (req.body.image && (req.body.image.startsWith('http://') || req.body.image.startsWith('https://') || req.body.image.startsWith('/uploads/'))) {
+      return res.json({
+        success: true,
+        url: req.body.image
       });
     }
 
-    let uploadResult;
+    let filename;
     if (req.file) {
-      const b64 = Buffer.from(req.file.buffer).toString('base64');
-      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-      uploadResult = await cloudinary.uploader.upload(dataURI, {
-        folder: 'rathore_electronics/payments',
-        resource_type: 'auto'
-      });
-    } else if (req.body.image) {
-      uploadResult = await cloudinary.uploader.upload(req.body.image, {
-        folder: 'rathore_electronics/payments',
-        resource_type: 'auto'
-      });
+      filename = req.file.filename;
+    } else if (req.body.image && req.body.image.startsWith('data:')) {
+      filename = saveBase64ToFile(req.body.image, 'payment');
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid payment screenshot format.' });
     }
+
+    const fileUrl = getFileUrl(req, filename);
 
     return res.json({
       success: true,
-      url: uploadResult.secure_url,
-      publicId: uploadResult.public_id
+      url: fileUrl,
+      filename
     });
   } catch (error) {
     console.error('Payment proof upload error:', error);
@@ -133,37 +121,14 @@ exports.uploadMultipleImages = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No images provided.' });
     }
 
-    const isCloudinaryConfigured = Boolean(
-      process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-    );
-
-    if (!isCloudinaryConfigured) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cloudinary credentials are not set.'
-      });
-    }
-
-    const uploadPromises = req.files.map(file => {
-      const b64 = Buffer.from(file.buffer).toString('base64');
-      const dataURI = `data:${file.mimetype};base64,${b64}`;
-      return cloudinary.uploader.upload(dataURI, {
-        folder: 'rathore_electronics/products',
-        resource_type: 'auto'
-      });
-    });
-
-    const results = await Promise.all(uploadPromises);
-    const urls = results.map(r => r.secure_url);
+    const urls = req.files.map(file => getFileUrl(req, file.filename));
 
     return res.json({
       success: true,
       urls
     });
   } catch (error) {
-    console.error('Cloudinary multiple upload error:', error);
+    console.error('Upload multiple images error:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Multi-image upload failed.'
