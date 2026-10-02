@@ -87,10 +87,11 @@ export function truncate(str, len = 80) {
 
 export function getImageUrl(url) {
   if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+  // Absolute URLs, data URIs, and blob URLs are already usable
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
     return url;
   }
-  // If it's a relative uploads path
+  // If it's a relative /uploads/ path (legacy data), prepend the backend base URL
   const backendBase = import.meta.env.VITE_API_URL 
     ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
     : '';

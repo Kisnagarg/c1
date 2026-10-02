@@ -26,7 +26,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Spinner from '../components/ui/Spinner';
-import { formatPrice, formatDateTime } from '../utils/helpers';
+import { formatPrice, formatDateTime, getImageUrl } from '../utils/helpers';
 
 export default function OrderPayment() {
   const { id } = useParams();
@@ -509,7 +509,7 @@ export default function OrderPayment() {
                       <div key={i} className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
                           <img 
-                            src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100'} 
+                            src={getImageUrl(item.image) || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100'} 
                             alt={item.name}
                             className="w-9 h-9 rounded-lg object-cover border bg-gray-100 shrink-0" 
                           />

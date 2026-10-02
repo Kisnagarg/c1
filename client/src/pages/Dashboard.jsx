@@ -41,7 +41,8 @@ import {
   getOrderStatusLabel, 
   getPaymentStatusLabel, 
   getStatusColor, 
-  getPaymentStatusColor 
+  getPaymentStatusColor,
+  getImageUrl 
 } from '../utils/helpers';
 import { validateIndianPhone } from '../utils/validators';
 import PhoneOtpModal from '../components/auth/PhoneOtpModal';
@@ -366,7 +367,7 @@ export default function Dashboard() {
                                     <img 
                                       key={i}
                                       className="inline-block h-10 w-10 rounded-xl ring-2 ring-white object-cover bg-gray-100 border"
-                                      src={item.image || 'https://images.unsplash.com/photo-1507582020434-97210e740b79?w=800'}
+                                      src={getImageUrl(item.image) || 'https://images.unsplash.com/photo-1507582020434-97210e740b79?w=800'}
                                       alt={item.name}
                                       title={item.name}
                                     />

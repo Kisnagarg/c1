@@ -6,7 +6,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Spinner from '../components/ui/Spinner';
-import { formatPrice } from '../utils/helpers';
+import { formatPrice, getImageUrl } from '../utils/helpers';
 import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../utils/initialData';
 
 export default function Products() {
@@ -298,7 +298,7 @@ export default function Products() {
                     <Link to={`/products/${product.slug}`}>
                       <div className="relative aspect-square overflow-hidden bg-gray-50 p-4">
                         <img 
-                          src={product.image || product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop'} 
+                          src={getImageUrl(product.image || product.images?.[0]) || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop'} 
                           alt={product.name} 
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
                         />

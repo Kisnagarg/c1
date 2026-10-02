@@ -31,7 +31,8 @@ import {
   getOrderStatusLabel, 
   getPaymentStatusLabel, 
   getStatusColor, 
-  getPaymentStatusColor 
+  getPaymentStatusColor,
+  getImageUrl 
 } from '../../utils/helpers';
 
 export default function AdminBookings() {
@@ -362,7 +363,7 @@ export default function AdminBookings() {
                             {booking.items?.slice(0, 2).map((item, i) => (
                               <img 
                                 key={i}
-                                src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100'}
+                                src={getImageUrl(item.image) || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100'}
                                 className="w-8 h-8 rounded-lg border-2 border-white object-cover bg-gray-100"
                                 title={item.name}
                               />
@@ -737,7 +738,7 @@ export default function AdminBookings() {
                     <div key={idx} className="py-2.5 flex items-center justify-between gap-4 text-xs">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100'} 
+                          src={getImageUrl(item.image) || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100'} 
                           alt={item.name} 
                           className="w-10 h-10 rounded-xl object-cover border bg-gray-100 shrink-0"
                         />

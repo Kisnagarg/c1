@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
-import { formatPrice } from '../../utils/helpers';
+import { formatPrice, getImageUrl } from '../../utils/helpers';
 
 export default function AdminProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -208,7 +208,7 @@ export default function AdminProducts() {
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
                             {product.image ? (
-                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                              <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400">
                                 <ImageIcon className="w-5 h-5" />

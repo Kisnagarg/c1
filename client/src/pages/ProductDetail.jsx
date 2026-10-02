@@ -4,7 +4,7 @@ import { Star, Truck, ShieldCheck, ArrowLeft, Check, AlertCircle } from 'lucide-
 import API from '../api/axios';
 import Button from '../components/ui/Button';
 import Spinner from '../components/ui/Spinner';
-import { formatPrice } from '../utils/helpers';
+import { formatPrice, getImageUrl } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProductDetail() {
@@ -82,7 +82,7 @@ export default function ProductDetail() {
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-3xl p-8 flex items-center justify-center aspect-square md:h-[500px] border border-gray-100 overflow-hidden shadow-sm">
               <img 
-                src={activeImage || product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop'} 
+                src={getImageUrl(activeImage || product.image) || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop'} 
                 alt={product.name}
                 className="w-full h-full object-contain mix-blend-multiply drop-shadow-xl transition-all duration-300"
               />
@@ -100,7 +100,7 @@ export default function ProductDetail() {
                       activeImage === img ? 'border-primary-600 ring-2 ring-primary-500/30' : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(img)} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

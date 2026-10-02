@@ -26,7 +26,8 @@ import {
   getOrderStatusLabel, 
   getPaymentStatusLabel, 
   getStatusColor, 
-  getPaymentStatusColor 
+  getPaymentStatusColor,
+  getImageUrl 
 } from '../utils/helpers';
 
 export default function BookingDetail() {
@@ -190,7 +191,7 @@ export default function BookingDetail() {
                 <div key={index} className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
                   <div className="w-20 h-20 bg-gray-50 rounded-2xl p-2 shrink-0 border border-gray-100 flex items-center justify-center">
                     <img 
-                      src={item.image || 'https://via.placeholder.com/150'} 
+                      src={getImageUrl(item.image) || 'https://via.placeholder.com/150'} 
                       alt={item.name} 
                       className="w-full h-full object-contain mix-blend-multiply"
                     />

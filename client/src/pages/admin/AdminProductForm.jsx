@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, Save, Trash2, Plus, Upload, Image as ImageIcon, Star, X } from 'lucide-react';
 import API from '../../api/axios';
+import { getImageUrl } from '../../utils/helpers';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -410,7 +411,7 @@ export default function AdminProductForm() {
                       isPrimary ? 'border-primary-600 ring-2 ring-primary-500/20' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <img src={imgUrl} alt={`Product ${idx}`} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(imgUrl)} alt={`Product ${idx}`} className="w-full h-full object-cover" />
                     
                     {/* Primary Badge */}
                     {isPrimary && (

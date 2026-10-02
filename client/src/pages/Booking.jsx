@@ -23,7 +23,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import PhoneOtpModal from '../components/auth/PhoneOtpModal';
-import { formatPrice } from '../utils/helpers';
+import { formatPrice, getImageUrl } from '../utils/helpers';
 import { validateIndianPhone } from '../utils/validators';
 
 export default function Booking() {
@@ -175,7 +175,7 @@ export default function Booking() {
               </h2>
               <div className="flex gap-5">
                 <div className="w-24 h-24 bg-gray-50 rounded-2xl shrink-0 p-2 border border-gray-100 flex items-center justify-center">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                  <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 text-base">{product.name}</h3>

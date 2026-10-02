@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, X, Eye, EyeOff, Upload, Image as ImageIcon, ArrowUpDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../api/axios';
+import { getImageUrl } from '../../utils/helpers';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -193,7 +194,7 @@ export default function AdminCategories() {
                     <td className="px-6 py-4">
                       <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shadow-sm border border-gray-200">
                         {cat.image ? (
-                          <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                          <img src={getImageUrl(cat.image)} alt={cat.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
                             <ImageIcon className="w-6 h-6" />
@@ -342,7 +343,7 @@ export default function AdminCategories() {
                   {/* Image Preview */}
                   {formData.image && (
                     <div className="relative w-full h-36 mb-3 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-                      <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                      <img src={getImageUrl(formData.image)} alt="Preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, image: '' })}

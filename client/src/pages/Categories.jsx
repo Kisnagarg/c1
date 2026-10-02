@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../api/axios';
 import Spinner from '../components/ui/Spinner';
+import { getImageUrl } from '../utils/helpers';
 import { INITIAL_CATEGORIES } from '../utils/initialData';
 
 export default function Categories() {
@@ -41,7 +42,7 @@ export default function Categories() {
             >
               <div className="relative h-80 rounded-3xl overflow-hidden shadow-sm group-hover:shadow-2xl transition-all duration-500 transform group-hover:-translate-y-2 bg-gray-900 border border-gray-100">
                 <img 
-                  src={cat.image || 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'} 
+                  src={getImageUrl(cat.image) || 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'} 
                   alt={cat.name} 
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-85 group-hover:opacity-100"
                 />
