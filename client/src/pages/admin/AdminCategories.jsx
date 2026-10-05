@@ -100,6 +100,7 @@ export default function AdminCategories() {
       toast.error(msg);
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
   };
 
@@ -194,7 +195,15 @@ export default function AdminCategories() {
                     <td className="px-6 py-4">
                       <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shadow-sm border border-gray-200">
                         {cat.image ? (
-                          <img src={getImageUrl(cat.image)} alt={cat.name} className="w-full h-full object-cover" />
+                          <img 
+                            src={getImageUrl(cat.image)} 
+                            alt={cat.name} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop';
+                            }}
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
                             <ImageIcon className="w-6 h-6" />
@@ -343,7 +352,15 @@ export default function AdminCategories() {
                   {/* Image Preview */}
                   {formData.image && (
                     <div className="relative w-full h-36 mb-3 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-                      <img src={getImageUrl(formData.image)} alt="Preview" className="w-full h-full object-cover" />
+                      <img 
+                        src={getImageUrl(formData.image)} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop';
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, image: '' })}

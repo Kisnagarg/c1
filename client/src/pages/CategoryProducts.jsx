@@ -71,6 +71,10 @@ export default function CategoryProducts() {
             <img 
               src={getImageUrl(category.image) || 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop'} 
               alt={category.name}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop';
+              }}
               className="w-full h-full object-cover"
             />
           </div>
