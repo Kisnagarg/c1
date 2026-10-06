@@ -7,14 +7,14 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Spinner from '../components/ui/Spinner';
 import { formatPrice, getImageUrl } from '../utils/helpers';
-import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../utils/initialData';
+import { INITIAL_CATEGORIES } from '../utils/initialData';
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ total: INITIAL_PRODUCTS.length, pages: 1, current: 1 });
+  const [pagination, setPagination] = useState({ total: 0, pages: 1, current: 1 });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filters state
@@ -54,50 +54,21 @@ export default function Products() {
         params.append('page', page);
 
         const res = await API.get(`/products?${params.toString()}`);
-        if (res.data?.products && res.data.products.length > 0) {
-          setProducts(res.data.products);
+        setProducts(res.data?.products || []);
+        if (res.data?.pagination) {
           setPagination(res.data.pagination);
-        } else if (res.data?.products && res.data.products.length === 0 && searchParams.toString()) {
-          // Empty search results from server
-          setProducts([]);
-          setPagination({ total: 0, pages: 1, current: 1 });
         } else {
-          // Fallback to client-side filtering on initial data
-          filterLocalData();
+          setPagination({ total: (res.data?.products || []).length, pages: 1, current: 1 });
         }
       } catch (error) {
-        // Fallback to local filtering
-        filterLocalData();
+        console.warn('Failed to fetch products from server:', error);
+        setProducts([]);
+        setPagination({ total: 0, pages: 1, current: 1 });
       } finally {
         setLoading(false);
       }
     };
 
-    const filterLocalData = () => {
-      let filtered = [...INITIAL_PRODUCTS];
-      if (search) {
-        filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()));
-      }
-      if (category) {
-        filtered = filtered.filter(p => p.category?.slug === category);
-      }
-      if (minPrice) {
-        filtered = filtered.filter(p => p.price >= Number(minPrice));
-      }
-      if (maxPrice) {
-        filtered = filtered.filter(p => p.price <= Number(maxPrice));
-      }
-      if (available) {
-        filtered = filtered.filter(p => p.stock > 0);
-      }
-
-      if (sort === 'price_asc') filtered.sort((a, b) => a.price - b.price);
-      else if (sort === 'price_desc') filtered.sort((a, b) => b.price - a.price);
-      else if (sort === 'popular') filtered.sort((a, b) => b.ratingAvg - a.ratingAvg);
-
-      setProducts(filtered);
-      setPagination({ total: filtered.length, pages: 1, current: 1 });
-    };
 
     fetchProducts();
   }, [searchParams]);

@@ -6,7 +6,7 @@ import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import Button from '../components/ui/Button';
 import { formatPrice, getImageUrl } from '../utils/helpers';
-import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../utils/initialData';
+import { INITIAL_CATEGORIES } from '../utils/initialData';
 
 export default function CategoryProducts() {
   const { slug } = useParams();
@@ -26,17 +26,15 @@ export default function CategoryProducts() {
           setCategory(catRes.data.category);
           setProducts(prodRes.data?.products || []);
         } else {
-          // Fallback to initial seed data
+          // Fallback category info from initial data, but products come from API only
           const fallbackCat = INITIAL_CATEGORIES.find(c => c.slug === slug);
-          const fallbackProds = INITIAL_PRODUCTS.filter(p => p.category?.slug === slug);
           setCategory(fallbackCat || null);
-          setProducts(fallbackProds);
+          setProducts([]);
         }
       } catch (error) {
         const fallbackCat = INITIAL_CATEGORIES.find(c => c.slug === slug);
-        const fallbackProds = INITIAL_PRODUCTS.filter(p => p.category?.slug === slug);
         setCategory(fallbackCat || null);
-        setProducts(fallbackProds);
+        setProducts([]);
       } finally {
         setLoading(false);
       }

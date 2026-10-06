@@ -7,12 +7,12 @@ import { useSettings } from '../context/SettingsContext';
 import Card from '../components/ui/Card';
 import Spinner from '../components/ui/Spinner';
 import { formatPrice, getImageUrl } from '../utils/helpers';
-import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../utils/initialData';
+import { INITIAL_CATEGORIES } from '../utils/initialData';
 
 export default function Home() {
   const { settings } = useSettings();
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
-  const [featuredProducts, setFeaturedProducts] = useState(INITIAL_PRODUCTS);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,9 +26,7 @@ export default function Home() {
         if (catsRes.data?.categories && catsRes.data.categories.length > 0) {
           setCategories(catsRes.data.categories);
         }
-        if (prodsRes.data?.products && prodsRes.data.products.length > 0) {
-          setFeaturedProducts(prodsRes.data.products);
-        }
+        setFeaturedProducts(prodsRes.data?.products || []);
       } catch (error) {
         console.warn('Using initial seed fallback data for display:', error);
       } finally {
