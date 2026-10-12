@@ -1,9 +1,22 @@
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 
+// In-memory cache for fast response times
+const categoriesCache = new Map();
+const CACHE_TTL_MS = 60 * 1000;
+
+const clearCategoriesCache = () => {
+  categoriesCache.clear();
+};
+
 // Get all categories with product counts
 exports.getCategories = async (req, res) => {
   try {
+    const cacheKey = JSON.stringify(req.query);
+    const cachedEntry = categoriesCache.get(cacheKey);
+    if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+      return res.json(cachedEntry.data);
+    }
     const filter = {};
     // Only return active categories for public users, unless includeInactive=true is requested by admin
     if (req.query.includeInactive !== 'true') {
@@ -27,7 +40,9 @@ exports.getCategories = async (req, res) => {
       productCount: countMap[cat._id.toString()] || 0
     }));
 
-    res.json({ success: true, categories: result });
+    const responseData = { success: true, categories: result };
+    categoriesCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+    res.json(responseData);
   } catch (error) {
     console.error('GetCategories error:', error);
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -67,6 +82,7 @@ exports.createCategory = async (req, res) => {
       displayOrder: displayOrder !== undefined ? Number(displayOrder) : 0
     });
 
+    clearCategoriesCache();
     res.status(201).json({
       success: true,
       message: 'Category created successfully.',
@@ -101,6 +117,7 @@ exports.updateCategory = async (req, res) => {
 
     await category.save();
 
+    clearCategoriesCache();
     res.json({
       success: true,
       message: 'Category updated successfully.',
@@ -129,6 +146,7 @@ exports.deleteCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found.' });
     }
 
+    clearCategoriesCache();
     res.json({ success: true, message: 'Category deleted successfully.' });
   } catch (error) {
     console.error('DeleteCategory error:', error);

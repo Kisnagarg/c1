@@ -39,19 +39,37 @@ export default function Products() {
       });
   }, []);
 
-  // Fetch products or filter initial data
+  // Synchronize state when URL searchParams change
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+    setCategory(searchParams.get('category') || '');
+    setMinPrice(searchParams.get('minPrice') || '');
+    setMaxPrice(searchParams.get('maxPrice') || '');
+    setSort(searchParams.get('sort') || 'newest');
+    setAvailable(searchParams.get('available') === 'true');
+  }, [searchParams]);
+
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
+        const searchVal = searchParams.get('search') || '';
+        const catVal = searchParams.get('category') || '';
+        const minVal = searchParams.get('minPrice') || '';
+        const maxVal = searchParams.get('maxPrice') || '';
+        const sortVal = searchParams.get('sort') || 'newest';
+        const availVal = searchParams.get('available') === 'true';
+        const pageVal = parseInt(searchParams.get('page')) || 1;
+
         const params = new URLSearchParams();
-        if (search) params.append('search', search);
-        if (category) params.append('category', category);
-        if (minPrice) params.append('minPrice', minPrice);
-        if (maxPrice) params.append('maxPrice', maxPrice);
-        if (sort) params.append('sort', sort);
-        if (available) params.append('available', 'true');
-        params.append('page', page);
+        if (searchVal) params.append('search', searchVal);
+        if (catVal) params.append('category', catVal);
+        if (minVal) params.append('minPrice', minVal);
+        if (maxVal) params.append('maxPrice', maxVal);
+        if (sortVal) params.append('sort', sortVal);
+        if (availVal) params.append('available', 'true');
+        params.append('page', pageVal);
 
         const res = await API.get(`/products?${params.toString()}`);
         setProducts(res.data?.products || []);
@@ -68,7 +86,6 @@ export default function Products() {
         setLoading(false);
       }
     };
-
 
     fetchProducts();
   }, [searchParams]);
@@ -297,9 +314,15 @@ export default function Products() {
                             <span className="text-[10px] text-gray-400 block font-medium">Price</span>
                             <span className="text-lg font-black text-gray-900">{formatPrice(product.price)}</span>
                           </div>
-                          <span className="text-xs font-bold px-3.5 py-1.5 bg-primary-50 text-primary-700 rounded-xl group-hover:bg-primary-600 group-hover:text-white transition-colors">
-                            Book Now
-                          </span>
+                          {product.stock > 0 && product.isAvailable !== false ? (
+                            <span className="text-xs font-bold px-3.5 py-1.5 bg-primary-50 text-primary-700 rounded-xl group-hover:bg-primary-600 group-hover:text-white transition-colors">
+                              Book Now
+                            </span>
+                          ) : (
+                            <span className="text-xs font-bold px-3 py-1.5 bg-red-50 text-red-600 rounded-xl">
+                              Out of Stock
+                            </span>
+                          )}
                         </div>
                       </div>
                     </Link>

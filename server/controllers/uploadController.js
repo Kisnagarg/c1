@@ -1,20 +1,73 @@
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Convert a multer file (on disk) to a base64 data URI, then clean up
-const fileToDataUri = (file) => {
-  const filePath = path.join(uploadsDir, file.filename);
-  const buffer = fs.readFileSync(filePath);
-  const base64 = buffer.toString('base64');
-  const mimeType = file.mimetype || 'image/png';
-  // Clean up the temp file
-  try { fs.unlinkSync(filePath); } catch (_) { /* ignore */ }
-  return `data:${mimeType};base64,${base64}`;
+// Client uploads mirror directory for seamless Vite dev and static serving
+const clientUploadsDir = path.join(__dirname, '..', '..', 'client', 'public', 'uploads');
+if (!fs.existsSync(clientUploadsDir)) {
+  fs.mkdirSync(clientUploadsDir, { recursive: true });
+}
+
+// Process an uploaded multer file, compress it with sharp, and save to uploads/
+const processUploadedFile = async (file) => {
+  const ext = '.jpg';
+  const uniqueName = `upload-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+  const srcPath = path.join(uploadsDir, file.filename);
+  const destPath = path.join(uploadsDir, uniqueName);
+  const clientDestPath = path.join(clientUploadsDir, uniqueName);
+
+  try {
+    const buffer = fs.readFileSync(srcPath);
+    const optimizedBuffer = await sharp(buffer)
+      .resize({ width: 1000, height: 1000, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    fs.writeFileSync(destPath, optimizedBuffer);
+    fs.writeFileSync(clientDestPath, optimizedBuffer);
+    return `/uploads/${uniqueName}`;
+  } catch (err) {
+    console.error('Sharp optimization failed, using original file:', err.message);
+    const originalBuffer = fs.readFileSync(srcPath);
+    fs.writeFileSync(destPath, originalBuffer);
+    fs.writeFileSync(clientDestPath, originalBuffer);
+    return `/uploads/${uniqueName}`;
+  } finally {
+    try { fs.unlinkSync(srcPath); } catch (_) { /* ignore */ }
+  }
+};
+
+// Save a base64 data URI to a static file on disk and return its /uploads/ URL
+const saveDataUriToFile = async (dataUri) => {
+  if (!dataUri || !dataUri.startsWith('data:image')) return dataUri;
+  const commaIdx = dataUri.indexOf(',');
+  if (commaIdx === -1) return dataUri;
+
+  const base64Data = dataUri.substring(commaIdx + 1);
+  const inputBuffer = Buffer.from(base64Data, 'base64');
+  const uniqueName = `upload-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+  const destPath = path.join(uploadsDir, uniqueName);
+  const clientDestPath = path.join(clientUploadsDir, uniqueName);
+
+  try {
+    const optimizedBuffer = await sharp(inputBuffer)
+      .resize({ width: 1000, height: 1000, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    fs.writeFileSync(destPath, optimizedBuffer);
+    fs.writeFileSync(clientDestPath, optimizedBuffer);
+  } catch (err) {
+    fs.writeFileSync(destPath, inputBuffer);
+    fs.writeFileSync(clientDestPath, inputBuffer);
+  }
+
+  return `/uploads/${uniqueName}`;
 };
 
 // Upload a single image (Admin)
@@ -24,7 +77,7 @@ exports.uploadSingleImage = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No image file or data provided.' });
     }
 
-    // If an external URL is provided directly in body, reuse it
+    // External URLs (e.g. Unsplash) pass straight through
     if (req.body.image && (req.body.image.startsWith('http://') || req.body.image.startsWith('https://'))) {
       return res.json({
         success: true,
@@ -33,26 +86,26 @@ exports.uploadSingleImage = async (req, res) => {
       });
     }
 
-    // If already a data URI, pass it through
+    // Base64 data URIs get extracted to static files
     if (req.body.image && req.body.image.startsWith('data:')) {
+      const fileUrl = await saveDataUriToFile(req.body.image);
       return res.json({
         success: true,
-        url: req.body.image,
-        filename: 'inline-image'
+        url: fileUrl,
+        filename: path.basename(fileUrl)
       });
     }
 
-    let dataUri;
-    if (req.file) {
-      dataUri = fileToDataUri(req.file);
-    } else {
+    if (!req.file) {
       return res.status(400).json({ success: false, message: 'Invalid image format provided.' });
     }
 
+    const fileUrl = await processUploadedFile(req.file);
+
     return res.json({
       success: true,
-      url: dataUri,
-      filename: req.file.originalname || 'uploaded-image'
+      url: fileUrl,
+      filename: path.basename(fileUrl)
     });
   } catch (error) {
     console.error('Upload single image error:', error);
@@ -78,23 +131,23 @@ exports.uploadPaymentProof = async (req, res) => {
     }
 
     if (req.body.image && req.body.image.startsWith('data:')) {
+      const fileUrl = await saveDataUriToFile(req.body.image);
       return res.json({
         success: true,
-        url: req.body.image
+        url: fileUrl
       });
     }
 
-    let dataUri;
-    if (req.file) {
-      dataUri = fileToDataUri(req.file);
-    } else {
+    if (!req.file) {
       return res.status(400).json({ success: false, message: 'Invalid payment screenshot format.' });
     }
 
+    const fileUrl = await processUploadedFile(req.file);
+
     return res.json({
       success: true,
-      url: dataUri,
-      filename: req.file.originalname || 'payment-proof'
+      url: fileUrl,
+      filename: path.basename(fileUrl)
     });
   } catch (error) {
     console.error('Payment proof upload error:', error);
@@ -112,7 +165,7 @@ exports.uploadMultipleImages = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No images provided.' });
     }
 
-    const urls = req.files.map(file => fileToDataUri(file));
+    const urls = await Promise.all(req.files.map(file => processUploadedFile(file)));
 
     return res.json({
       success: true,

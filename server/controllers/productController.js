@@ -1,9 +1,22 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 
+// In-memory cache for fast response times
+const productsCache = new Map();
+const CACHE_TTL_MS = 60 * 1000;
+
+const clearProductsCache = () => {
+  productsCache.clear();
+};
+
 // Get all products with search, filter, sort, pagination
 exports.getProducts = async (req, res) => {
   try {
+    const cacheKey = JSON.stringify(req.query);
+    const cachedEntry = productsCache.get(cacheKey);
+    if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+      return res.json(cachedEntry.data);
+    }
     const { 
       search, category, minPrice, maxPrice, 
       available, status, stockStatus, includeInactive,
@@ -15,12 +28,10 @@ exports.getProducts = async (req, res) => {
     // Only filter active products for public users
     if (includeInactive !== 'true') {
       query.isActive = { $ne: false };
-      query.isAvailable = { $ne: false };
     } else if (status === 'active') {
       query.isActive = true;
-      query.isAvailable = true;
     } else if (status === 'inactive') {
-      query.$or = [{ isActive: false }, { isAvailable: false }];
+      query.isActive = false;
     }
 
     // Search by name or description
@@ -76,6 +87,7 @@ exports.getProducts = async (req, res) => {
 
     const [products, total] = await Promise.all([
       Product.find(query)
+        .select('-images -detailedDescription -specifications')
         .populate('category', 'name slug')
         .sort(sortOption)
         .skip(skip)
@@ -84,7 +96,7 @@ exports.getProducts = async (req, res) => {
       Product.countDocuments(query)
     ]);
 
-    res.json({
+    const responseData = {
       success: true,
       products,
       pagination: {
@@ -93,7 +105,10 @@ exports.getProducts = async (req, res) => {
         total,
         limit: Number(limit)
       }
-    });
+    };
+
+    productsCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+    res.json(responseData);
   } catch (error) {
     console.error('GetProducts error:', error);
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -169,6 +184,7 @@ exports.createProduct = async (req, res) => {
     });
 
     await product.populate('category', 'name slug');
+    clearProductsCache();
 
     res.status(201).json({
       success: true,
@@ -209,7 +225,6 @@ exports.updateProduct = async (req, res) => {
     if (updates.price !== undefined) product.price = Number(updates.price);
     if (updates.stock !== undefined) {
       product.stock = Number(updates.stock);
-      if (product.stock === 0) product.isAvailable = false;
     }
     if (updates.image !== undefined) product.image = updates.image;
     if (updates.images !== undefined && Array.isArray(updates.images)) {
@@ -224,6 +239,7 @@ exports.updateProduct = async (req, res) => {
 
     await product.save();
     await product.populate('category', 'name slug');
+    clearProductsCache();
 
     res.json({
       success: true,
@@ -244,6 +260,7 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found.' });
     }
 
+    clearProductsCache();
     res.json({ success: true, message: 'Product deleted successfully.' });
   } catch (error) {
     console.error('DeleteProduct error:', error);

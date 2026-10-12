@@ -110,8 +110,8 @@ export default function ProductDetail() {
           {/* Product Info */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 text-sm mb-4">
-              <span className={`px-2.5 py-1 rounded-full font-medium ${product.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {product.isAvailable ? 'In Stock' : 'Out of Stock'}
+              <span className={`px-2.5 py-1 rounded-full font-medium ${product.isAvailable && product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {product.isAvailable && product.stock > 0 ? 'In Stock' : 'Out of Stock'}
               </span>
               <span className="text-gray-500">{product.stock} units left</span>
             </div>
@@ -160,10 +160,10 @@ export default function ProductDetail() {
               <Button 
                 size="lg" 
                 className="w-full text-lg shadow-lg"
-                disabled={!product.isAvailable}
+                disabled={!product.isAvailable || product.stock <= 0}
                 onClick={handleBookNow}
               >
-                {product.isAvailable ? 'Book Now' : 'Currently Unavailable'}
+                {product.isAvailable && product.stock > 0 ? 'Book Now' : 'Out of Stock'}
               </Button>
             </div>
 
@@ -244,10 +244,10 @@ export default function ProductDetail() {
           <Button 
             size="md" 
             className="font-bold text-sm px-6 h-11 shadow-md bg-primary-600 hover:bg-primary-700"
-            disabled={!product.isAvailable}
+            disabled={!product.isAvailable || product.stock <= 0}
             onClick={handleBookNow}
           >
-            {product.isAvailable ? 'Book Now' : 'Out of Stock'}
+            {product.isAvailable && product.stock > 0 ? 'Book Now' : 'Out of Stock'}
           </Button>
         </div>
       </div>

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
 
 const connectDB = require('./config/db');
@@ -19,9 +20,16 @@ const settingsRoutes = require('./routes/settings');
 
 const app = express();
 
+let seedInitialized = false;
+
 // Try initial DB connection if MONGODB_URI is provided
 if (process.env.MONGODB_URI) {
-  connectDB().catch(err => {
+  connectDB().then(() => {
+    if (!seedInitialized) {
+      seedInitialized = true;
+      ensureSeedData().catch(err => console.error('Seed check error:', err.message));
+    }
+  }).catch(err => {
     console.error('Initial DB connection attempt failed:', err.message);
   });
 }
@@ -60,7 +68,10 @@ app.use('/api', async (req, res, next) => {
 
   try {
     await connectDB();
-    await ensureSeedData();
+    if (!seedInitialized) {
+      seedInitialized = true;
+      ensureSeedData().catch(err => console.error('Seed check notice:', err.message));
+    }
     next();
   } catch (error) {
     return res.status(503).json({
@@ -68,7 +79,6 @@ app.use('/api', async (req, res, next) => {
       message: `Database connection error: ${error.message}`
     });
   }
-
 });
 
 // API Routes

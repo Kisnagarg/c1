@@ -24,7 +24,7 @@ export default function AdminProductForm() {
     name: '',
     category: '',
     price: '',
-    stock: '',
+    stock: '10',
     description: '',
     detailedDescription: '',
     image: '',
@@ -82,21 +82,61 @@ export default function AdminProductForm() {
     setFormData({ ...formData, [e.target.name]: value });
   };
 
-  // Image Upload via Cloudinary
+  const compressImageFile = (file, maxWidth = 1000, quality = 0.8) => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) return resolve(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxWidth) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob && blob.size < file.size) {
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Image Upload via Backend
   const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files || files.length === 0) return;
+    const rawFiles = Array.from(e.target.files);
+    if (!rawFiles || rawFiles.length === 0) return;
 
     // Validate size
-    for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File "${file.name}" is over 10MB limit`);
+    for (const file of rawFiles) {
+      if (file.size > 15 * 1024 * 1024) {
+        toast.error(`File "${file.name}" is over 15MB limit`);
         return;
       }
     }
 
     setUploadingImage(true);
     try {
+      const files = await Promise.all(rawFiles.map(f => compressImageFile(f)));
       if (files.length === 1) {
         const data = new FormData();
         data.append('image', files[0]);
@@ -217,8 +257,8 @@ export default function AdminProductForm() {
         detailedDescription: formData.detailedDescription.trim(),
         image: formData.image || (formData.images[0] || ''),
         images: formData.images,
-        isAvailable: Number(formData.stock) > 0 && formData.isAvailable,
-        isActive: formData.isActive,
+        isAvailable: formData.isAvailable !== false,
+        isActive: formData.isActive !== false,
         specifications: formData.specifications.filter(s => s.key && s.value)
       };
 

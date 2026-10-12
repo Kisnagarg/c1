@@ -74,22 +74,62 @@ export default function AdminCategories() {
     setFormData({ name: '', description: '', image: '', isActive: true, displayOrder: 0 });
   };
 
-  // Handle direct file upload to Cloudinary
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const compressImageFile = (file, maxWidth = 800, quality = 0.8) => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) return resolve(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxWidth) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob && blob.size < file.size) {
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
 
-    // Check size (< 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image must be less than 10MB');
+  // Handle direct file upload
+  const handleFileUpload = async (e) => {
+    const rawFile = e.target.files[0];
+    if (!rawFile) return;
+
+    // Check size (< 15MB)
+    if (rawFile.size > 15 * 1024 * 1024) {
+      toast.error('Image must be less than 15MB');
       return;
     }
 
-    const data = new FormData();
-    data.append('image', file);
-
     setUploadingImage(true);
     try {
+      const file = await compressImageFile(rawFile);
+      const data = new FormData();
+      data.append('image', file);
+
       const res = await API.post('/upload/single', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
