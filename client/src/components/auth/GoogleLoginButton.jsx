@@ -11,6 +11,8 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickGmailModal, setShowQuickGmailModal] = useState(false);
   
+  const [isOfficialButtonRendered, setIsOfficialButtonRendered] = useState(false);
+
   const [quickEmail, setQuickEmail] = useState('');
   const [quickName, setQuickName] = useState('');
   const buttonContainerRef = useRef(null);
@@ -44,6 +46,9 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
   useEffect(() => {
     if (!googleClientId) return;
 
+    let checkInterval = null;
+    let attempts = 0;
+
     const initGsi = () => {
       if (window.google?.accounts?.id && buttonContainerRef.current) {
         try {
@@ -54,6 +59,7 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
             cancel_on_tap_outside: true
           });
 
+          buttonContainerRef.current.innerHTML = '';
           window.google.accounts.id.renderButton(
             buttonContainerRef.current,
             {
@@ -66,6 +72,13 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
               width: buttonContainerRef.current.offsetWidth || 340
             }
           );
+
+          // Verify if Google successfully injected the button iframe into container
+          setTimeout(() => {
+            if (buttonContainerRef.current && buttonContainerRef.current.children.length > 0) {
+              setIsOfficialButtonRendered(true);
+            }
+          }, 350);
         } catch (e) {
           console.warn('Google Identity Services init warning:', e);
         }
@@ -75,15 +88,30 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
     if (window.google?.accounts?.id) {
       initGsi();
     } else {
-      const timer = setTimeout(initGsi, 500);
-      return () => clearTimeout(timer);
+      checkInterval = setInterval(() => {
+        attempts++;
+        if (window.google?.accounts?.id) {
+          clearInterval(checkInterval);
+          initGsi();
+        } else if (attempts > 15) {
+          clearInterval(checkInterval);
+        }
+      }, 250);
     }
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
   }, [googleClientId]);
 
   const handleCustomGoogleClick = () => {
     if (googleClientId && window.google?.accounts?.id) {
       try {
-        window.google.accounts.id.prompt();
+        window.google.accounts.id.prompt((notification) => {
+          if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment())) {
+            setShowQuickGmailModal(true);
+          }
+        });
         return;
       } catch (e) {
         console.warn('Prompt error:', e);
@@ -132,21 +160,24 @@ export default function GoogleLoginButton({ onSuccess, redirectTo = '/' }) {
     <div className="w-full">
       {/* Official Google Button Mount point */}
       {googleClientId && (
-        <div ref={buttonContainerRef} className="w-full flex justify-center mb-3 min-h-[44px]" />
+        <div 
+          ref={buttonContainerRef} 
+          className={isOfficialButtonRendered ? "w-full flex justify-center mb-3 min-h-[44px]" : "w-0 h-0 overflow-hidden opacity-0 pointer-events-none"} 
+        />
       )}
 
       {/* Styled Google / Gmail Login Button Fallback */}
-      {(!googleClientId || !window.google?.accounts?.id) && (
+      {!isOfficialButtonRendered && (
         <button
           type="button"
           onClick={handleCustomGoogleClick}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 active:scale-[0.99] disabled:opacity-60 cursor-pointer text-sm"
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 active:scale-[0.99] disabled:opacity-60 cursor-pointer text-sm mb-3"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
