@@ -44,6 +44,9 @@ const upload = multer({
   }
 });
 
+// Upload service status check
+router.get('/status', uploadController.getUploadStatus);
+
 // Admin protected upload routes for products, categories, QR code
 router.post('/single', auth, admin, upload.single('image'), uploadController.uploadSingleImage);
 router.post('/multiple', auth, admin, upload.array('images', 8), uploadController.uploadMultipleImages);
