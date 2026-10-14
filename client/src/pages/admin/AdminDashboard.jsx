@@ -36,18 +36,40 @@ import {
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchStats = () => {
+    setLoading(true);
+    setError(null);
     API.get('/admin/stats')
       .then(res => setStats(res.data.stats))
-      .catch(console.error)
+      .catch(err => {
+        console.error('Failed to load stats:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to load dashboard data.');
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStats();
   }, []);
 
   if (loading) {
     return (
-      <div className="h-96 flex items-center justify-center">
+      <div className="h-96 flex flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
+        <p className="text-xs text-gray-400 font-medium animate-pulse">Loading dashboard statistics...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center bg-white rounded-3xl border border-red-100 shadow-sm max-w-lg mx-auto my-12">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+        <h3 className="text-lg font-bold text-gray-900 mb-1">Failed to load statistics</h3>
+        <p className="text-sm text-gray-500 mb-5">{error}</p>
+        <Button onClick={fetchStats} className="px-6 py-2">Retry</Button>
       </div>
     );
   }
