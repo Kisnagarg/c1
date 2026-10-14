@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "BookMart E-Commerce Client & Serverless Backend",
   "scripts": {
+    "start": "node server/server.js",
     "build": "cd client && npm install && npm run build",
     "seed": "node server/seed/seed.js"
   },

@@ -49,6 +49,15 @@ const staticUploadsDir = process.env.VERCEL
   : path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(staticUploadsDir));
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Rathore Electronics (C1) API Server is running',
+    health: '/api/health'
+  });
+});
+
 // Health check route (always available)
 app.get('/api/health', (req, res) => {
   res.json({
@@ -111,9 +120,9 @@ const PORT = process.env.PORT || 5001;
 
 // Only listen when running as standalone server (not in Vercel serverless environment)
 if (require.main === module && process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📡 API available at http://localhost:${PORT}/api`);
+    console.log(`📡 API available at http://0.0.0.0:${PORT}/api`);
   });
 }
 
