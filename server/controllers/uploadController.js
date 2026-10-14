@@ -84,7 +84,6 @@ const saveDataUriToFile = async (dataUri) => {
 
   return `/uploads/${uniqueName}`;
 };
-};
 
 // Upload a single image (Admin)
 exports.uploadSingleImage = async (req, res) => {
