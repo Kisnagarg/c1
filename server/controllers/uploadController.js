@@ -11,15 +11,21 @@ const isCloudinaryActive = () => {
   );
 };
 
-// Configure Cloudinary if explicit keys are provided
-if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true,
-  });
-}
+// Ensure Cloudinary is configured
+const ensureCloudinaryConfig = () => {
+  if (process.env.CLOUDINARY_URL) {
+    cloudinary.config();
+  } else if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME.trim(),
+      api_key: process.env.CLOUDINARY_API_KEY.trim(),
+      api_secret: process.env.CLOUDINARY_API_SECRET.trim(),
+      secure: true,
+    });
+  }
+};
+ensureCloudinaryConfig();
+
 
 // Local fallback uploads directory
 const uploadsDir = process.env.VERCEL
@@ -281,3 +287,45 @@ exports.getUploadStatus = (req, res) => {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || (process.env.CLOUDINARY_URL ? 'configured' : null)
   });
 };
+
+// Test Cloudinary connection directly
+exports.testCloudinary = async (req, res) => {
+  try {
+    if (process.env.CLOUDINARY_URL) {
+      cloudinary.config();
+    } else if (process.env.CLOUDINARY_CLOUD_NAME) {
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME.trim(),
+        api_key: process.env.CLOUDINARY_API_KEY ? process.env.CLOUDINARY_API_KEY.trim() : '',
+        api_secret: process.env.CLOUDINARY_API_SECRET ? process.env.CLOUDINARY_API_SECRET.trim() : '',
+        secure: true,
+      });
+    }
+
+    const testUpload = await cloudinary.uploader.upload(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      { folder: 'rathore_electronics/test' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Cloudinary connected and uploaded test image successfully!',
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      hasApiKey: Boolean(process.env.CLOUDINARY_API_KEY),
+      hasApiSecret: Boolean(process.env.CLOUDINARY_API_SECRET),
+      hasUrl: Boolean(process.env.CLOUDINARY_URL),
+      testUrl: testUpload.secure_url
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      http_code: err.http_code,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      hasApiKey: Boolean(process.env.CLOUDINARY_API_KEY),
+      hasApiSecret: Boolean(process.env.CLOUDINARY_API_SECRET),
+      hasUrl: Boolean(process.env.CLOUDINARY_URL)
+    });
+  }
+};
+

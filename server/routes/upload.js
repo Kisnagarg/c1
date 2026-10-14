@@ -44,8 +44,9 @@ const upload = multer({
   }
 });
 
-// Upload service status check
+// Upload service status check & Cloudinary test
 router.get('/status', uploadController.getUploadStatus);
+router.get('/test', uploadController.testCloudinary);
 
 // Admin protected upload routes for products, categories, QR code
 router.post('/single', auth, admin, upload.single('image'), uploadController.uploadSingleImage);
