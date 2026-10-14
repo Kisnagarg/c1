@@ -44,7 +44,10 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(morgan('dev'));
 
 // Static files for uploads (fallback)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const staticUploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(staticUploadsDir));
 
 // Health check route (always available)
 app.get('/api/health', (req, res) => {

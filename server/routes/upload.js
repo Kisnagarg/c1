@@ -8,11 +8,16 @@ const admin = require('../middleware/admin');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure uploads folder exists
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Ensure uploads folder exists (/tmp on Vercel serverless)
+const uploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, '..', 'uploads');
+
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (_) {}
 
 // Multer disk storage for local uploads
 const storage = multer.diskStorage({

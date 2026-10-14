@@ -2,16 +2,23 @@ const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const uploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, '..', 'uploads');
+
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (_) {}
 
 // Client uploads mirror directory for seamless Vite dev and static serving
 const clientUploadsDir = path.join(__dirname, '..', '..', 'client', 'public', 'uploads');
-if (!fs.existsSync(clientUploadsDir)) {
-  fs.mkdirSync(clientUploadsDir, { recursive: true });
-}
+try {
+  if (!process.env.VERCEL && !fs.existsSync(clientUploadsDir)) {
+    fs.mkdirSync(clientUploadsDir, { recursive: true });
+  }
+} catch (_) {}
 
 // Process an uploaded multer file, compress it with sharp, and save to uploads/
 const processUploadedFile = async (file) => {
@@ -29,13 +36,17 @@ const processUploadedFile = async (file) => {
       .toBuffer();
 
     fs.writeFileSync(destPath, optimizedBuffer);
-    fs.writeFileSync(clientDestPath, optimizedBuffer);
+    if (!process.env.VERCEL) {
+      try { fs.writeFileSync(clientDestPath, optimizedBuffer); } catch (_) {}
+    }
     return `/uploads/${uniqueName}`;
   } catch (err) {
     console.error('Sharp optimization failed, using original file:', err.message);
     const originalBuffer = fs.readFileSync(srcPath);
     fs.writeFileSync(destPath, originalBuffer);
-    fs.writeFileSync(clientDestPath, originalBuffer);
+    if (!process.env.VERCEL) {
+      try { fs.writeFileSync(clientDestPath, originalBuffer); } catch (_) {}
+    }
     return `/uploads/${uniqueName}`;
   } finally {
     try { fs.unlinkSync(srcPath); } catch (_) { /* ignore */ }
@@ -61,13 +72,18 @@ const saveDataUriToFile = async (dataUri) => {
       .toBuffer();
 
     fs.writeFileSync(destPath, optimizedBuffer);
-    fs.writeFileSync(clientDestPath, optimizedBuffer);
+    if (!process.env.VERCEL) {
+      try { fs.writeFileSync(clientDestPath, optimizedBuffer); } catch (_) {}
+    }
   } catch (err) {
     fs.writeFileSync(destPath, inputBuffer);
-    fs.writeFileSync(clientDestPath, inputBuffer);
+    if (!process.env.VERCEL) {
+      try { fs.writeFileSync(clientDestPath, inputBuffer); } catch (_) {}
+    }
   }
 
   return `/uploads/${uniqueName}`;
+};
 };
 
 // Upload a single image (Admin)
